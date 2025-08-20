@@ -4,17 +4,17 @@ from datetime import date, datetime
 from typing import Any
 from pydantic import BaseModel,EmailStr, SecretStr, Field, ConfigDict
 
-class Member(BaseModel):
+class MemberBase(BaseModel):
     full_name: str
     email: EmailStr
     phone_number: str
     join_date: date | None = None
     address: str | None = None
+    admin: bool
 
-
-class CreateMember(Member):
+class CreateMember(MemberBase):
     """Body for POST /members"""
-    password: SecretStr
+    password_hash: SecretStr
 
 class UpdateMember(BaseModel):
     full_name: str| None = None
@@ -22,9 +22,10 @@ class UpdateMember(BaseModel):
     phone_number: str | None = None
     join_date: date | None = None
     address: str | None = None
-    password: SecretStr |  None = None
+    password_hash: SecretStr |  None = None
+    admin: bool | None = None
 
-class ShowMember(Member):
+class ShowMember(MemberBase):
     """Response shape for GET/POST responses"""
     id: int 
     loans: list[ShowLoan] = Field(default_factory=list)
@@ -32,7 +33,7 @@ class ShowMember(Member):
     model_config = ConfigDict(from_attributes=True)
 
 
-class Book(BaseModel):
+class BookBase(BaseModel):
 
     title: str
     author: str
@@ -40,7 +41,7 @@ class Book(BaseModel):
     genre: str | None = None
     available_copies: int 
 
-class CreateBook(Book):
+class CreateBook(BookBase):
     pass
 
 class UpdateBook(BaseModel):
@@ -50,20 +51,20 @@ class UpdateBook(BaseModel):
     genre: str | None = None
     available_copies: int | None = None
 
-class ShowBook(Book):
+class ShowBook(BookBase):
     id: int
     loans: list[ShowLoan] = Field(default_factory=list) 
     model_config = ConfigDict(from_attributes=True)
 
 
-class Loan(BaseModel):
+class LoanBase(BaseModel):
     book_id: int 
     borrow_date: date
     due_date: date
     return_date: date | None = None
     member_id: int 
 
-class CreateLoan(Loan):
+class CreateLoan(LoanBase):
     pass
 
 class UpdateLoan(BaseModel):
@@ -73,20 +74,20 @@ class UpdateLoan(BaseModel):
     return_date: date | None = None
     member_id: int | None = None
 
-class ShowLoan(Loan):
+class ShowLoan(LoanBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
 
-class Event(BaseModel):
-    time_stamp = datetime
+class EventBase(BaseModel):
+    time_stamp: datetime
     event_type: str
     metadata: dict[str, Any] | None = None
     member_id: int | None = None
 
-class CreateEvent(Event):
+class CreateEvent(EventBase):
     pass
 
-class ShowEvent(Event):
+class ShowEvent(EventBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
 
