@@ -1,46 +1,39 @@
-from typing import Any, Dict, Optional, Union
+from datetime import date
+from typing import Any, Dict, Optional, Union, List
 
+from fastapi import Query, Depends
 from sqlalchemy.orm import Session
 
+from app.database import get_db
 from app.crud.base import CRUDBase
 from app.models import Member
-from app.schemas import CreateMember, UpdateMember, ShowMember
+from app.schemas import CreateMember, UpdateMember
+from app.hashing import Hash
 
 
-class CRUDMember(CRUDBase[Member, CreateMember, UpdateMember,ShowMember ]):
-    def get_by_id(self, db: Session, *, id: int) -> Optional[ShowMember]:
-        return db.query(Member).filter(Member.id == id).first()
-    
-    def get_by_name(self, db: Session, *, full_name: str) -> Optional[ShowMember]:
-        return db.query(Member).filter(Member.full_name == full_name).first()
+class CRUDMember(CRUDBase[Member, CreateMember, UpdateMember]):
+    def create(self, db, *, obj_in: CreateMember) -> Member:
+        data = obj_in.model_dump(exclude={"password"})      
+        plain = obj_in.password.get_secret_value()
+        hashed = Hash.get_password_hash(plain)
+        db_obj = Member(**data, password=hashed)
+        db.add(db_obj); db.commit(); db.refresh(db_obj)
+        return db_obj
 
-    def get_by_email(self, db: Session, *, email: str) -> Optional[ShowMember]:
-        return db.query(Member).filter(Member.email == email).first()
-    
-    def get_by_phone_number(self, db: Session, *, phone_number: str) -> Optional[ShowMember]:
-        return db.query(Member).filter(Member.phone_number == phone_number).first()
-
-    def get_by_name(self, db: Session, *, full_name: str) -> Optional[list[ShowMember]]:
-        return db.query(Member).filter(Member.full_name == full_name).first()
-
-    def get_by_join_date(self, db: Session, *, join_date: date) -> Optional[list[ShowMember]]:
-        return db.query(Member).filter(Member.join_date == join_date).first()
-
-    def get_by_address(self, db: Session, *, address: str) -> Optional[list[ShowMember]]:
-        return db.query(Member).filter(Member.address == address).first()
-
-    def update(
-        self, db: Session, *, db_obj: Member, obj_in: Union[UpdateMember, Dict[str, Any]]
-    ) -> Member:
-        if isinstance(obj_in, dict):
-            update_data = obj_in
-        else:
-            update_data = obj_in.dict(exclude_unset=True)
-
-        return super().update(db, db_obj=db_obj, obj_in=update_data)
+    def update(self, db, *, db_obj: Member, obj_in: UpdateMember | dict) -> Member:
+        if not isinstance(obj_in, dict):
+            obj_in = obj_in.model_dump(exclude_unset=True)
+        if "password" in obj_in and obj_in["password"] is not None:
+            plain = obj_in["password"].get_secret_value()   # ← חובה!
+            db_obj.password = Hash.get_password_hash(plain)
+            obj_in.pop("password", None)
+        for k, v in obj_in.items():
+            setattr(db_obj, k, v)
+        db.add(db_obj); db.commit(); db.refresh(db_obj)
+        return db_obj
 
     def is_admin(self, Member: Member) -> bool:
         return Member.is_admin
 
+crud_member = CRUDMember(Member)
 
-Member = CRUDMember(Member)

@@ -1,8 +1,12 @@
 from fastapi import FastAPI
+from . import  models
+from .database import engine
+from  .routers import members
+
 
 app = FastAPI()
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+models.Base.metadata.create_all(engine)
+
+app.include_router(members.router)

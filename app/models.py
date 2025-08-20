@@ -16,7 +16,7 @@ class Member(Base):
     phone_number = Column(String, unique=True, index=True, nullable=False)
     join_date = Column(Date, default=date.today)
     address = Column(String)
-    password_hash = Column(String)
+    password = Column(String)
     admin = Column(Boolean, default=False)
 
     loans = relationship("Loan", back_populates="member", cascade="all, delete-orphan")
@@ -60,7 +60,7 @@ class Event(Base):
     id = Column(Integer, primary_key=True, index=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     event_type = Column(String, index=True)
-    metadata = Column(Text)
+    meta_data = Column(Text)
 
     member_id = Column(Integer, ForeignKey("members.id", ondelete="CASCADE"), index=True, nullable=False)
     member = relationship("Member", back_populates="events")

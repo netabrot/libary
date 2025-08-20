@@ -14,7 +14,7 @@ class MemberBase(BaseModel):
 
 class CreateMember(MemberBase):
     """Body for POST /members"""
-    password_hash: SecretStr
+    password: SecretStr
 
 class UpdateMember(BaseModel):
     full_name: str| None = None
@@ -81,7 +81,7 @@ class ShowLoan(LoanBase):
 class EventBase(BaseModel):
     time_stamp: datetime
     event_type: str
-    metadata: dict[str, Any] | None = None
+    meta_data: dict[str, Any] | None = None
     member_id: int | None = None
 
 class CreateEvent(EventBase):

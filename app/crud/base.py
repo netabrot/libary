@@ -24,8 +24,16 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         obj = db.get(self.model, id)
         return obj
     
-    def get_by(self, db: Session, **filters) -> Optional[ModelType]:
+    def get_by(self, db:Session, **filters) -> Optional[ModelType]:
         return db.query(self.model).filter_by(**filters).first()
+
+
+    def list_like(self, db: Session, **likes) -> List[ModelType]:
+        q = db.query(self.model)
+        for col, val in likes.items():
+            q = q.filter(getattr(self.model, col).ilike(f"%{val}%"))
+        return q.all()
+
 
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in)
