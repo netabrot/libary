@@ -1,10 +1,3 @@
-from datetime import date
-from typing import Any, Dict, Optional, Union, List
-
-from fastapi import Query, Depends
-from sqlalchemy.orm import Session
-
-from app.database import get_db
 from app.crud.base import CRUDBase
 from app.models import Member
 from app.schemas import CreateMember, UpdateMember
@@ -24,7 +17,7 @@ class CRUDMember(CRUDBase[Member, CreateMember, UpdateMember]):
         if not isinstance(obj_in, dict):
             obj_in = obj_in.model_dump(exclude_unset=True)
         if "password" in obj_in and obj_in["password"] is not None:
-            plain = obj_in["password"].get_secret_value()   # ← חובה!
+            plain = obj_in["password"].get_secret_value()
             db_obj.password = Hash.get_password_hash(plain)
             obj_in.pop("password", None)
         for k, v in obj_in.items():
