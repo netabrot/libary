@@ -16,6 +16,7 @@ class Member(Base):
     phone_number = Column(String, unique=True, index=True, nullable=False)
     join_date = Column(Date, default=date.today)
     address = Column(String)
+    password = Column(String)
 
     loans = relationship("Loan", back_populates="member", cascade="all, delete-orphan")
     events = relationship("Events", back_populates="member", cascade="all, delete-orphan")
