@@ -1,4 +1,11 @@
-from . import Base, Column, Integer, ForeignKey, Date,date,relativedelta, relationship
+from datetime import date
+
+from sqlalchemy import Column, Integer, Date, ForeignKey
+from sqlalchemy.orm import relationship
+from dateutil.relativedelta import relativedelta
+
+from app.db import Base
+
 
 class Loan(Base):
     """A loan record: which User borrowed which book and when."""

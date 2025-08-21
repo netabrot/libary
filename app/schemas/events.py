@@ -1,4 +1,6 @@
-from . import BaseModel, datetime, Field, timezone, Any, ConfigDict
+from datetime import datetime, timezone
+from typing import Any
+from pydantic import BaseModel, Field, ConfigDict
 
 class EventBase(BaseModel):
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

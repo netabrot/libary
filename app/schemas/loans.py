@@ -1,4 +1,5 @@
-from . import BaseModel, date, ConfigDict
+from datetime import date
+from pydantic import BaseModel, ConfigDict
 
 class LoanBase(BaseModel):
     book_id: int 

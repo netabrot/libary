@@ -1,4 +1,7 @@
-from . import Base, Column, Integer, String, text, relationship
+from sqlalchemy import Column, Integer, String, text
+from sqlalchemy.orm import relationship
+
+from app.db import Base
 
 class Book(Base):
     """Book item in the library catalog."""

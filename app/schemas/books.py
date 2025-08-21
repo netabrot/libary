@@ -1,6 +1,6 @@
 
 from .loans import ShowLoan
-from . import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 
 class BookBase(BaseModel):
 

@@ -1,6 +1,8 @@
 from .loans import ShowLoan
 from .events import ShowEvent
-from . import BaseModel, EmailStr, date, UserRole, SecretStr, Field, ConfigDict
+from datetime import date
+from pydantic import BaseModel,EmailStr, SecretStr, Field, ConfigDict
+from app.core.enums import UserRole
 
 class UserBase(BaseModel):
     full_name: str

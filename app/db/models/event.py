@@ -1,4 +1,7 @@
-from . import Base, Column, Integer,DateTime,func,JSON,ForeignKey, String, relationship
+from sqlalchemy import Column, Integer, DateTime, String, ForeignKey, JSON, func
+from sqlalchemy.orm import relationship
+
+from app.db import Base
 
 class Event(Base):
     """System log/event: what happened and when (optionally linked to a User)."""

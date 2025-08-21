@@ -1,19 +1,15 @@
 from datetime import date
 from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
-from app.schemas.loans import CreateLoan, UpdateLoan, ShowLoan
-from app.db.models.book import Book
-from app.db.models.user import User
-from app.services.loan import crud_loan as loan
-from app.api.deps import require_role
 from app.core.enums import UserRole
-from app.services.event import log_event
+from app.schemas import CreateLoan, UpdateLoan, ShowLoan
+from app.db.models import Book, User
+from app.services import crud_loan as loan, log_event
+from app.api.deps import get_db, require_role
 from app import utils
-
-
 
 router = APIRouter(
     prefix="/loans",

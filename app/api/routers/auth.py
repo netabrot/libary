@@ -1,21 +1,17 @@
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
-from sqlalchemy.orm.session import Session
+from sqlalchemy.orm import Session
 
-from app.core import config, security
-from app.core.enums import *
-from app.schemas.users import ShowUser, CreateUser
-from app.schemas.events import EventBase
-from app.db.models.user import User
-import app.api.deps as deps
-from app.services import auth
-from app.services.user import crud_user as user
-from app.services.event import log_event
+from app.schemas import (
+    CreateUser, ShowUser,
+)
 
+from app.db.models import User
+from app.services import log_event
+from app.api.deps import get_db, get_current_user
 
-router = APIRouter()
 
 router = APIRouter(
     prefix="/auth",
@@ -24,7 +20,7 @@ router = APIRouter(
 
 
 @router.post("/signup", response_model=ShowUser, status_code=status.HTTP_201_CREATED)
-def create_user(payload: CreateUser, db: Session = Depends(deps.get_db)) -> Any:
+def create_user(payload: CreateUser, db: Session = Depends(get_db)) -> Any:
     """
     Create new user without the need to be logged in.
     """
@@ -36,7 +32,7 @@ def create_user(payload: CreateUser, db: Session = Depends(deps.get_db)) -> Any:
 
 
 @router.post("/login")
-def login(db: Session = Depends(deps.get_db), form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
+def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
     """
     Get the JWT for a user with data from OAuth2 request form body.
     """
@@ -46,7 +42,7 @@ def login(db: Session = Depends(deps.get_db), form_data: OAuth2PasswordRequestFo
 
 
 @router.get("/me", response_model=ShowUser)
-def read_users_me(current_user: User = Depends(deps.get_current_user)):
+def read_users_me(current_user: User = Depends(get_current_user)):
     """
     Fetch the current logged in user.
     """

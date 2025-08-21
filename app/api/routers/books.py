@@ -1,15 +1,13 @@
 from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.db.session import get_db
-from app.schemas.books import CreateBook, UpdateBook, ShowBook
-from app.services.book import crud_book as book
-from app.api.deps import get_current_user, require_role
-from app.db.models.book import Book
-from app.db.models.user import User
 from app.core.enums import UserRole
-from app.services.event import log_event
+from app.schemas import CreateBook, UpdateBook, ShowBook
+from app.db.models import Book, User
+from app.services import crud_book as book, log_event
+from app.api.deps import get_db, require_role
 from app import utils
 
 router = APIRouter(

@@ -1,4 +1,6 @@
-from . import BaseModel, UserRole
+from pydantic import BaseModel
+from app.core.enums import UserRole
+
 
 class Token(BaseModel):
     access_token: str
