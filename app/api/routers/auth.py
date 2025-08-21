@@ -30,7 +30,7 @@ def create_user(payload: CreateUser, db: Session = Depends(deps.get_db)) -> Any:
     data = payload.model_dump() 
     data.setdefault("role", "member")
     created = user.create(db, obj_in=payload)
-    log_event(db, created, "user.created")
+    log_event(db, "user.created", created)
     return created
 
 
@@ -40,7 +40,7 @@ def login(db: Session = Depends(deps.get_db), form_data: OAuth2PasswordRequestFo
     Get the JWT for a user with data from OAuth2 request form body.
     """
     logged = auth.login(form_data,db)
-    log_event(db, logged, "user.logged")
+    log_event(db, "user.logged", logged)
     return logged
 
 
