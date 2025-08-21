@@ -4,6 +4,15 @@ from app.schemas.schemas import CreateUser, UpdateUser
 from app.core import security
 
 class CRUDuser(CRUDBase[User, CreateUser, UpdateUser]):
+        
+    def create(db, *, obj_in: CreateUser) -> User:
+            data = obj_in.model_dump(exclude={"password"})      
+            plain = obj_in.password.get_secret_value()
+            hashed = security.get_password_hash(plain)
+            db_obj = User(**data, password=hashed)
+            db.add(db_obj); db.commit(); db.refresh(db_obj)
+            return db_obj
+    
     def update(self, db, *, db_obj: User, obj_in: UpdateUser | dict) -> User:
         if not isinstance(obj_in, dict):
             obj_in = obj_in.model_dump(exclude_unset=True)

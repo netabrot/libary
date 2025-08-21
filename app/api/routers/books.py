@@ -3,11 +3,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas.schemas import CreateBook, UpdateBook, ShowBook
+from app.schemas.schemas import CreateBook, EventBase, UpdateBook, ShowBook
 from app.services.book import crud_book as book
-from app.api.deps import require_role
+from app.api.deps import get_current_user, require_role
 from app.db.models.models import Book, User
 from app.core.enums import UserRole
+from app.services.event import log_event
+from app import utils
 
 router = APIRouter(
     prefix="/books",
@@ -22,30 +24,36 @@ def list_books(
     published_year: str | None = None,
     genre: str | None = None,
     total_copies: int | None = None,
-    db: Session = Depends(get_db)):
+    db: Session = Depends(get_db),):
         
-        return book.list_like(
-            db,
-            **{k: v for k, v in {
-                id: int,
-                title: str,
-                author: str,
-                published_year: str,
-                genre: str,
-                total_copies: int
-            }.items() if v is not None}
-        )
+    filters = utils.filters(
+        id= id,
+        title= title,
+        author= author,
+        published_year= published_year,
+        genre= genre,
+        total_copies= total_copies
+    )
+    
+    searched = book.list_like(db, **filters)
+    log_event(db,"book.searched", **filters)
+    return searched
 
 @router.post("/", response_model=ShowBook)
 def create_book(payload: CreateBook, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
-    return book.create(db, db_obj=book, obj_in=payload)
+    created = book.create(db, db_obj=book, obj_in=payload)
+    log_event(db,"book.created", current_user, book_id=created.id)
+    return created
 
 @router.patch("/{book_id}", response_model=ShowBook)
 def update_book(book_id: int, payload: UpdateBook, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
     obj = book.get(db, book_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Book not found")
-    return book.update(db, db_obj=obj, obj_in=payload)
+    
+    updated = book.update(db, db_obj=obj, obj_in=payload)
+    log_event(db,"book.updated",current_user, book_id,  updated_fields=utils.changed_fields(payload))
+    return updated
     
 
 @router.delete("/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -53,7 +61,9 @@ def delete_book(book_id: int, db: Session = Depends(get_db), current_user: User 
     obj = book.get(db, book_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Book not found")
-    if obj.role != UserRole.ADMIN and book_id != obj.book_id:
-            raise HTTPException(status_code=403, detail="Only Admin")
+    
     Book.remove(db, id=book_id)
+
+    log_event(db,"book.deleted",current_user, book_id)
+
     return

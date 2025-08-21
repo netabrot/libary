@@ -1,6 +1,6 @@
 # Models = database tables.
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Date, Text, func, text, Enum as SAEnum
+from sqlalchemy import JSON, Boolean, Column, DateTime, ForeignKey, Integer, String, Date, Text, func, text, Enum as SAEnum
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 from datetime import date
@@ -63,9 +63,9 @@ class Event(Base):
     id = Column(Integer, primary_key=True, index=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     event_type = Column(String, index=True)
-    meta_data = Column(Text)
+    meta_data = Column(JSON, nullable=True)
 
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=True)
     user = relationship("User", back_populates="events")
 
 

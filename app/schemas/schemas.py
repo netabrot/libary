@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Any
 from pydantic import BaseModel,EmailStr, SecretStr, Field, ConfigDict
 from app.core.enums import *
@@ -82,13 +82,10 @@ class ShowLoan(LoanBase):
     model_config = ConfigDict(from_attributes=True)
 
 class EventBase(BaseModel):
-    timestamp: datetime
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     event_type: str
     meta_data: dict[str, Any] | None = None
     user_id: int | None = None
-
-class CreateEvent(EventBase):
-    pass
 
 class ShowEvent(EventBase):
     id: int
