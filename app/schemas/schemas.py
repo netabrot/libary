@@ -3,29 +3,32 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import Any
 from pydantic import BaseModel,EmailStr, SecretStr, Field, ConfigDict
+from app.core.enums import *
 
-class MemberBase(BaseModel):
+class UserBase(BaseModel):
     full_name: str
     email: EmailStr
     phone_number: str
     join_date: date | None = None
     address: str | None = None
-    admin: bool
+    role: UserRole
+    is_active: bool
 
-class CreateMember(MemberBase):
-    """Body for POST /members"""
+class CreateUser(UserBase):
+    """Body for POST /users"""
     password: SecretStr
 
-class UpdateMember(BaseModel):
+class UpdateUser(BaseModel):
     full_name: str| None = None
     email: EmailStr | None = None
     phone_number: str | None = None
     join_date: date | None = None
     address: str | None = None
-    password_hash: SecretStr |  None = None
-    admin: bool | None = None
+    password: SecretStr |  None = None
+    role: UserRole | None = None
+    is_active: bool | None = None
 
-class ShowMember(MemberBase):
+class ShowUser(UserBase):
     """Response shape for GET/POST responses"""
     id: int 
     loans: list[ShowLoan] = Field(default_factory=list)
@@ -62,7 +65,7 @@ class LoanBase(BaseModel):
     borrow_date: date
     due_date: date
     return_date: date | None = None
-    member_id: int 
+    user_id: int 
 
 class CreateLoan(LoanBase):
     pass
@@ -72,17 +75,17 @@ class UpdateLoan(BaseModel):
     borrow_date: date | None = None
     due_date: date | None = None
     return_date: date | None = None
-    member_id: int | None = None
+    user_id: int | None = None
 
 class ShowLoan(LoanBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
 
 class EventBase(BaseModel):
-    time_stamp: datetime
+    timestamp: datetime
     event_type: str
     meta_data: dict[str, Any] | None = None
-    member_id: int | None = None
+    user_id: int | None = None
 
 class CreateEvent(EventBase):
     pass
@@ -92,7 +95,7 @@ class ShowEvent(EventBase):
     model_config = ConfigDict(from_attributes=True)
 
 
-ShowMember.model_rebuild()
+ShowUser.model_rebuild()
 ShowBook.model_rebuild()
 ShowLoan.model_rebuild()
 ShowEvent.model_rebuild()

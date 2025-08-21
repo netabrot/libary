@@ -1,6 +1,6 @@
 from app.crud.base import CRUDBase
 from app.models import Book
-from app.schemas import CreateBook, UpdateBook
+from app.schemas.schemas import CreateBook, UpdateBook
 from app.hashing import Hash
 
 

@@ -1,13 +1,14 @@
 # Models = database tables.
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Date, Text, func, text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Date, Text, func, text, Enum as SAEnum
 from sqlalchemy.orm import relationship
-from app.database import Base
+from app.db.session import Base
 from datetime import date
+from app.core.enums import *
 
-class Member(Base):
-    """Library member: a registered user who can borrow books."""
-    __tablename__ = 'members'
+class User(Base):
+    """Library User: a registered user who can borrow books."""
+    __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True, index=True)
     
@@ -17,10 +18,11 @@ class Member(Base):
     join_date = Column(Date, default=date.today)
     address = Column(String)
     password = Column(String)
-    admin = Column(Boolean, default=False)
+    role = Column(SAEnum(UserRole), default=UserRole.MEMBER)
+    is_active = Column(Boolean, default=False)
 
-    loans = relationship("Loan", back_populates="member", cascade="all, delete-orphan")
-    events = relationship("Event", back_populates="member", cascade="all, delete-orphan")
+    loans = relationship("Loan", back_populates="User", cascade="all, delete-orphan")
+    events = relationship("Event", back_populates="User", cascade="all, delete-orphan")
 
 
 class Book(Base):
@@ -38,7 +40,7 @@ class Book(Base):
 
 
 class Loan(Base):
-    """A loan record: which member borrowed which book and when."""
+    """A loan record: which User borrowed which book and when."""
 
     __tablename__ = 'loans'
 
@@ -48,12 +50,12 @@ class Loan(Base):
     due_date = Column(Date, nullable=False, default=date.today)
     return_date = Column(Date)
 
-    member_id = Column(Integer, ForeignKey("members.id", ondelete="CASCADE"), index=True, nullable=False)
-    member = relationship("Member", back_populates="loans")
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    User = relationship("User", back_populates="loans")
     book = relationship("Book", back_populates="loans")
 
 class Event(Base):
-    """System log/event: what happened and when (optionally linked to a member)."""
+    """System log/event: what happened and when (optionally linked to a User)."""
 
     __tablename__ = 'events'
 
@@ -62,8 +64,8 @@ class Event(Base):
     event_type = Column(String, index=True)
     meta_data = Column(Text)
 
-    member_id = Column(Integer, ForeignKey("members.id", ondelete="CASCADE"), index=True, nullable=False)
-    member = relationship("Member", back_populates="events")
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    User = relationship("User", back_populates="events")
 
 
 #TODO: Order
