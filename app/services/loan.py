@@ -1,11 +1,10 @@
-from app.crud.base import CRUDBase
-from app.models import Loan
+from app.services.base import CRUDBase
+from app.db.models.models import Loan
 from app.schemas.schemas import CreateLoan, UpdateLoan
-from app.hashing import Hash
+from datetime import date
 
+class CRUDloan(CRUDBase[Loan, CreateLoan, UpdateLoan]):
+    def calculate_return_date(self):
+        return date.today - self.borrow_date
 
-class CRUDLoan(CRUDBase[Loan, CreateLoan, UpdateLoan]):
-    pass
-
-crud_loan = CRUDLoan(Loan)
-
+crud_loan = CRUDloan(Loan)

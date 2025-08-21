@@ -4,6 +4,7 @@ from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, D
 from sqlalchemy.orm import relationship
 from app.db.session import Base
 from datetime import date
+from dateutil.relativedelta import relativedelta
 from app.core.enums import *
 
 class User(Base):
@@ -21,8 +22,8 @@ class User(Base):
     role = Column(SAEnum(UserRole), default=UserRole.MEMBER)
     is_active = Column(Boolean, default=False)
 
-    loans = relationship("Loan", back_populates="User", cascade="all, delete-orphan")
-    events = relationship("Event", back_populates="User", cascade="all, delete-orphan")
+    loans = relationship("Loan", back_populates="user", cascade="all, delete-orphan")
+    events = relationship("Event", back_populates="user", cascade="all, delete-orphan")
 
 
 class Book(Base):
@@ -34,7 +35,7 @@ class Book(Base):
     author = Column(String, index=True)
     published_year = Column(Integer, index=True)
     genre = Column(String)
-    available_copies = Column(Integer,nullable=False, default=1, server_default=text("1"))
+    total_copies = Column(Integer,nullable=False, default=1, server_default=text("1"))
 
     loans = relationship("Loan", back_populates="book", cascade="all, delete-orphan")
 
@@ -47,11 +48,11 @@ class Loan(Base):
     id = Column(Integer, primary_key=True, index=True)
     book_id = Column(Integer, ForeignKey("books.id", ondelete="CASCADE"), index=True, nullable=False)
     borrow_date = Column(Date, nullable=False, default=date.today)
-    due_date = Column(Date, nullable=False, default=date.today)
+    due_date = Column(Date, nullable=False, default=date.today() + relativedelta(months=1))
     return_date = Column(Date)
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
-    User = relationship("User", back_populates="loans")
+    user = relationship("User", back_populates="loans")
     book = relationship("Book", back_populates="loans")
 
 class Event(Base):
@@ -65,7 +66,7 @@ class Event(Base):
     meta_data = Column(Text)
 
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
-    User = relationship("User", back_populates="events")
+    user = relationship("User", back_populates="events")
 
 
 #TODO: Order

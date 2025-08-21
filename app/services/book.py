@@ -1,11 +1,11 @@
-from app.crud.base import CRUDBase
-from app.models import Book
+from app.services.base import CRUDBase
+from app.db.models.models import Book
 from app.schemas.schemas import CreateBook, UpdateBook
-from app.hashing import Hash
 
+class CRUDbook(CRUDBase[Book, CreateBook, UpdateBook]):
+    def available_copies(self):
+        active_loans = [loan for loan in self.loans if loan.return_date is None]
+        return self.total_copies - len(active_loans)
 
-class CRUDBook(CRUDBase[Book, CreateBook, UpdateBook]):
-    pass
-
-crud_Book = CRUDBook(Book)
+crud_book = CRUDbook(Book)
 

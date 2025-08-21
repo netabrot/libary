@@ -42,7 +42,7 @@ class BookBase(BaseModel):
     author: str
     published_year: int 
     genre: str | None = None
-    available_copies: int 
+    total_copies: int 
 
 class CreateBook(BookBase):
     pass
@@ -52,7 +52,7 @@ class UpdateBook(BaseModel):
     author: str | None = None
     published_year: int | None = None
     genre: str | None = None
-    available_copies: int | None = None
+    total_copies: int | None = None
 
 class ShowBook(BookBase):
     id: int

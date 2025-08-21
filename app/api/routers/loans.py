@@ -5,7 +5,12 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas.schemas import CreateLoan, UpdateLoan, ShowLoan
-from app.crud.crud_loan import crud_loan
+from app.db.models.models import Book, User
+from app.services.loan import crud_loan
+from app.api.deps import require_role
+from app.core.enums import UserRole
+
+
 
 router = APIRouter(
     prefix="/loans",
@@ -33,18 +38,23 @@ def list_Loans(
         )
 
 @router.post("/", response_model=ShowLoan, status_code=status.HTTP_201_CREATED)
-def create_loan(payload: CreateLoan, db: Session = Depends(get_db)):
+def create_loan(payload: CreateLoan, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
+    book = db.query(Book).book = db.query(Book).filter(Book.id == CreateLoan.book_id).first()
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    if book.available_copies <= 0:
+        raise HTTPException(status_code=400, detail="No available copies for this book")
     return crud_loan.create(db, obj_in=payload)
 
 @router.patch("/{loan_id}", response_model=ShowLoan)
-def update_loan(loan_id: int, payload: UpdateLoan, db: Session = Depends(get_db)):
+def update_loan(loan_id: int, payload: UpdateLoan, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
     obj = crud_loan.get(db, id=loan_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Loan not found")
     return crud_loan.update(db, db_obj=obj, obj_in=payload)
 
 @router.delete("/{loan_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_loan(loan_id: int, db: Session = Depends(get_db)):
+def delete_loan(loan_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
     obj = crud_loan.get(db, id=loan_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Loan not found")
