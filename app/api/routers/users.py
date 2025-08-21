@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas.schemas import CreateUser, UpdateUser, ShowUser
+from app.schemas.users import CreateUser, UpdateUser, ShowUser
 from app.services.user import crud_user as user
 from app.api.deps import require_role
 from app.db.models.models import User

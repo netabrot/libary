@@ -1,6 +1,6 @@
 from app.services.base import CRUDBase
 from app.db.models.models import Loan
-from app.schemas.schemas import CreateLoan, UpdateLoan
+from app.schemas.loans import CreateLoan, UpdateLoan
 from datetime import date
 
 class CRUDloan(CRUDBase[Loan, CreateLoan, UpdateLoan]):

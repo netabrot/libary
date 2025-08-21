@@ -6,7 +6,8 @@ from sqlalchemy.orm.session import Session
 
 from app.core import config, security
 from app.core.enums import *
-from app.schemas.schemas import EventBase, ShowUser, CreateUser
+from app.schemas.users import ShowUser, CreateUser
+from app.schemas.events import EventBase
 from app.db.models.models import User
 import app.api.deps as deps
 from app.services import auth

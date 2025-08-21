@@ -1,6 +1,4 @@
-from typing import Literal
-from pydantic import BaseModel
-from app.core.enums import UserRole
+from . import BaseModel, UserRole
 
 class Token(BaseModel):
     access_token: str

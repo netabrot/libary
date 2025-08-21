@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
-from app.schemas.schemas import CreateLoan, EventBase, UpdateLoan, ShowLoan
+from app.schemas.loans import CreateLoan, UpdateLoan, ShowLoan
 from app.db.models.models import Book, User
 from app.services.loan import crud_loan as loan
 from app.api.deps import require_role

@@ -1,6 +1,6 @@
 from app.services.base import CRUDBase
 from app.db.models.models import User
-from app.schemas.schemas import CreateUser, UpdateUser
+from app.schemas.users import CreateUser, UpdateUser
 from app.core import security
 
 class CRUDuser(CRUDBase[User, CreateUser, UpdateUser]):
