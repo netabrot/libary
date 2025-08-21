@@ -6,11 +6,11 @@ from app.db.session import get_db
 from app.schemas.users import CreateUser, UpdateUser, ShowUser
 from app.services.user import crud_user as user
 from app.api.deps import require_role
-from app.db.models.models import User
+from app.db.models.user import User
 from app.core.enums import UserRole
 from app.services.event import log_event
 from app import utils
-from app.api.deps import get_current_user,get_db
+from app.api.deps import get_db
 
 router = APIRouter(
     prefix="/users",

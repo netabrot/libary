@@ -1,5 +1,5 @@
 from app.services.base import CRUDBase
-from app.db.models.models import Book
+from app.db.models.book import Book
 from app.schemas.books import CreateBook, UpdateBook
 
 class CRUDbook(CRUDBase[Book, CreateBook, UpdateBook]):

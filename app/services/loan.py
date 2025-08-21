@@ -1,5 +1,5 @@
 from app.services.base import CRUDBase
-from app.db.models.models import Loan
+from app.db.models.loan import Loan
 from app.schemas.loans import CreateLoan, UpdateLoan
 from datetime import date
 

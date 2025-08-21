@@ -8,7 +8,7 @@ from app.core import config, security
 from app.core.enums import *
 from app.schemas.users import ShowUser, CreateUser
 from app.schemas.events import EventBase
-from app.db.models.models import User
+from app.db.models.user import User
 import app.api.deps as deps
 from app.services import auth
 from app.services.user import crud_user as user

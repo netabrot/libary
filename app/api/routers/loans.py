@@ -5,7 +5,8 @@ from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas.loans import CreateLoan, UpdateLoan, ShowLoan
-from app.db.models.models import Book, User
+from app.db.models.book import Book
+from app.db.models.user import User
 from app.services.loan import crud_loan as loan
 from app.api.deps import require_role
 from app.core.enums import UserRole

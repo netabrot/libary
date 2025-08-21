@@ -6,7 +6,8 @@ from app.db.session import get_db
 from app.schemas.books import CreateBook, UpdateBook, ShowBook
 from app.services.book import crud_book as book
 from app.api.deps import get_current_user, require_role
-from app.db.models.models import Book, User
+from app.db.models.book import Book
+from app.db.models.user import User
 from app.core.enums import UserRole
 from app.services.event import log_event
 from app import utils

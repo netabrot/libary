@@ -1,4 +1,5 @@
-from app.db.models.models import Event, User
+from app.db.models.event import Event
+from app.db.models.user import User
 from app.schemas.events import EventBase
 
 def log_event(db, event_type: str, user: User | None = None, **meta):

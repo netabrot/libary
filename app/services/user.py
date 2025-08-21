@@ -1,5 +1,5 @@
 from app.services.base import CRUDBase
-from app.db.models.models import User
+from app.db.models.user import User
 from app.schemas.users import CreateUser, UpdateUser
 from app.core import security
 

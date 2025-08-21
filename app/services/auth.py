@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from app.db.models.models import User
+from app.db.models.user import User
 from app.schemas.users import CreateUser
 from app.core.security import *
 

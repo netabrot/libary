@@ -1,7 +1,6 @@
 from fastapi import FastAPI
 
 from app.db.session import Base, engine
-import app.db.models.models  
 from app.api.routers import auth as auth_router
 from app.api.routers import users as users_router  
 from app.api.routers import books as books_router  
