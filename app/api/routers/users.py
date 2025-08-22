@@ -1,3 +1,21 @@
+"""
+Users Router
+------------
+
+Manages user accounts in the system.
+
+Endpoints:
+- GET /users/         → List users with optional filters (admin only)
+- POST /users/        → Create a new user (admin only)
+- PATCH /users/{id}   → Update user details (admin only, with role restrictions)
+- DELETE /users/{id}  → Delete a user (admin only, with role restrictions)
+
+Notes:
+- Admin-only actions enforced via `require_role(UserRole.ADMIN)`.
+- Extra security: prevents privilege escalation (non-admins can’t make themselves admin).
+- All actions are logged with `log_event`.
+"""
+
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -24,6 +42,8 @@ def list_users(
     phone_number: str | None = None,
     address: str | None = None,
     db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
+        """List users with optional filters (admin only)."""
+
         filters = utils.filters(
             id= id,
             full_name= full_name,
@@ -37,12 +57,14 @@ def list_users(
         
 @router.post("/", response_model=List[ShowUser])
 def create_user(payload: CreateUser, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))) -> Any:
+    """Create a new user (admin only). Logs the creation event."""
     created = user.create(db, obj_in=payload)
     log_event(db, "user.created",current_user, user_id=created.id)
     return created
 
 @router.patch("/{user_id}", response_model=ShowUser)
 def update_user(user_id: int, payload: UpdateUser, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
+    """Update user details (admin only). Prevents role escalation."""
     obj = user.get(db, user_id)
     if not obj:
         raise HTTPException(status_code=404, detail="User not found")
@@ -57,6 +79,7 @@ def update_user(user_id: int, payload: UpdateUser, db: Session = Depends(get_db)
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_User(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
+    """Delete a user (admin only). Restricted by role rules."""
     obj = user.get(db, user_id)
     if not obj:
         raise HTTPException(status_code=404, detail="User not found")

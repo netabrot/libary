@@ -1,3 +1,20 @@
+"""
+Authentication Router
+---------------------
+
+This file defines the API endpoints for user authentication and self-service.
+
+Endpoints:
+- POST /auth/signup → Create a new user (no login required, defaults to 'member' role)
+- POST /auth/login  → Authenticate a user and return a JWT token
+- GET /auth/me      → Fetch the currently logged-in user's details
+
+Notes:
+- JWT-based authentication using OAuth2PasswordRequestForm for login.
+- `log_event` is used to track signups, logins, and activity.
+- Database sessions are handled with `Depends(get_db)`.
+"""
+
 from typing import Any
 
 from fastapi import APIRouter, Depends, status
@@ -11,6 +28,7 @@ from app.schemas import (
 from app.db.models import User
 from app.services import log_event
 from app.api.deps import get_db, get_current_user
+from libary.app.services import user
 
 
 router = APIRouter(
@@ -21,9 +39,7 @@ router = APIRouter(
 
 @router.post("/signup", response_model=ShowUser, status_code=status.HTTP_201_CREATED)
 def create_user(payload: CreateUser, db: Session = Depends(get_db)) -> Any:
-    """
-    Create new user without the need to be logged in.
-    """
+    """Register a new user (defaults to role=member). Logs the creation event."""
     data = payload.model_dump() 
     data.setdefault("role", "member")
     created = user.create(db, obj_in=payload)
@@ -33,9 +49,7 @@ def create_user(payload: CreateUser, db: Session = Depends(get_db)) -> Any:
 
 @router.post("/login")
 def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
-    """
-    Get the JWT for a user with data from OAuth2 request form body.
-    """
+    """Authenticate user via OAuth2 form and return JWT. Logs login event."""
     logged = auth.login(form_data,db)
     log_event(db, "user.logged", logged)
     return logged
@@ -43,9 +57,7 @@ def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = 
 
 @router.get("/me", response_model=ShowUser)
 def read_users_me(current_user: User = Depends(get_current_user)):
-    """
-    Fetch the current logged in user.
-    """
+    """Return details of the currently authenticated user."""
     user = current_user
     return user
 

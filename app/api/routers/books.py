@@ -1,3 +1,21 @@
+"""
+Books Router
+------------
+
+This file defines the API endpoints for managing books in the library system.
+
+Endpoints:
+- GET /books/        → List books with optional filters (id, title, author, year, genre, copies)
+- POST /books/       → Create a new book (admin only)
+- PATCH /books/{id}  → Update book details (admin only)
+- DELETE /books/{id} → Delete a book (admin only)
+
+Notes:
+- Admin-only actions require authentication and role checks.
+- Each action logs an event with `log_event`.
+- Database sessions are provided via `Depends(get_db)`.
+"""
+
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -24,7 +42,8 @@ def list_books(
     genre: str | None = None,
     total_copies: int | None = None,
     db: Session = Depends(get_db),):
-        
+    """List books with optional filters. Logs a search event."""
+
     filters = utils.filters(
         id= id,
         title= title,
@@ -40,12 +59,16 @@ def list_books(
 
 @router.post("/", response_model=ShowBook)
 def create_book(payload: CreateBook, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
+    """Create a new book (admin only). Logs the creation event."""
+    
     created = book.create(db, db_obj=book, obj_in=payload)
     log_event(db,"book.created", current_user, book_id=created.id)
     return created
 
 @router.patch("/{book_id}", response_model=ShowBook)
 def update_book(book_id: int, payload: UpdateBook, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
+    """Update an existing book’s details (admin only). Logs the update event."""
+
     obj = book.get(db, book_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -57,6 +80,8 @@ def update_book(book_id: int, payload: UpdateBook, db: Session = Depends(get_db)
 
 @router.delete("/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_book(book_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
+    """Delete a book by ID (admin only). Logs the deletion event."""
+    
     obj = book.get(db, book_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Book not found")
