@@ -11,15 +11,18 @@ Functions:
 - require_role(role)   → Dependency factory to enforce a specific UserRole.
 """
 
-from typing import Generator
-from fastapi import Depends, HTTPException, status
+import time
+from typing import Callable, Generator
+from fastapi import Depends, HTTPException, Request, Response, status
+from fastapi.routing import APIRoute
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
 from app.db.models.user import User  
 from app.core.security import verify_token
-from app.core.enums import UserRole
+from app.core.enums import EventType, UserRole
+from app.services.event import log_event
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -58,3 +61,35 @@ def require_role(required_role: UserRole):
         return current_user
     return role_checker
 
+class TimedRoute(APIRoute):
+    def get_route_handler(self) -> Callable:
+        original_route_handler = super().get_route_handler()
+
+        async def custom_route_handler(request: Request) -> Response:
+            before = time.time()
+            response: Response = await original_route_handler(request)
+            duration = time.time() - before
+            response.headers["X-Response-Time"] = str(duration)
+            
+            db = SessionLocal()
+            try:
+                user = getattr(request.state, "user", None)
+                meta = {
+                    "path": request.url.path,
+                    "method": request.method,
+                    "user_id": request.headers.get("user_id")}
+                log_event(
+                    db,
+                    EventType.HTTP_COMPLETED,
+                    user=user,
+                    status_code=response.status_code,
+                    method=request.method,
+                    duration_ms=duration,
+                    **meta,
+                )
+            except Exception:
+                db.rollback()
+            finally:
+                db.close()
+
+        return custom_route_handler

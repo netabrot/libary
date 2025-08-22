@@ -21,11 +21,11 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.enums import UserRole
+from app.core.enums import EventType, ObjectType, UserRole
 from app.schemas import CreateUser, UpdateUser, ShowUser
 from app.db.models import User
 from app.services import crud_user as user, log_event
-from app.api.deps import get_db, require_role
+from app.api.deps import get_db, require_role, TimedRoute 
 from app import utils
 
 
@@ -33,6 +33,7 @@ router = APIRouter(
     prefix="/users",
     tags=['Users']
 )
+router.route_class = TimedRoute
 
 @router.get("/", response_model=List[ShowUser])
 def list_users(
@@ -59,7 +60,8 @@ def list_users(
 def create_user(payload: CreateUser, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))) -> Any:
     """Create a new user (admin only). Logs the creation event."""
     created = user.create(db, obj_in=payload)
-    log_event(db, "user.created",current_user, user_id=created.id)
+    log_event(db, EventType.USER_CREATED, ObjectType.USER, current_user, status_code=status.HTTP_201_CREATED, method="POST", user_id=getattr(created.state, "id", None))
+
     return created
 
 @router.patch("/{user_id}", response_model=ShowUser)
@@ -73,7 +75,7 @@ def update_user(user_id: int, payload: UpdateUser, db: Session = Depends(get_db)
     if payload.role == UserRole.ADMIN and obj.role != UserRole.ADMIN:
         raise HTTPException(status_code=403, detail="Only Admin") 
     updated = user.update(db, db_obj=obj, obj_in=payload)
-    log_event(db,"user.updated",current_user, user_id, updated_fields=utils.changed_fields(payload))
+    log_event(db, EventType.USER_UPDATED, ObjectType.USER, current_user, status_code=status.HTTP_202_ACCEPTED, user_id= user_id, updated_fields=utils.changed_fields(payload))
     return updated
 
 
@@ -86,6 +88,6 @@ def delete_User(user_id: int, db: Session = Depends(get_db), current_user: User 
     if obj.role != UserRole.ADMIN and user_id != obj.user_id:
             raise HTTPException(status_code=403, detail="Only Admin")
     user.remove(db, id=user_id)
-    log_event(db,"user.removed",current_user, user_id)
+    log_event(db, EventType.USER_REMOVED, ObjectType.USER, current_user, status_code=status.HTTP_204_NO_CONTENT, user_id= user_id)
 
     return

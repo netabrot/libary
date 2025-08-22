@@ -21,17 +21,19 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.enums import UserRole
+from app.core.enums import EventType, UserRole, ObjectType
 from app.schemas import CreateBook, UpdateBook, ShowBook
 from app.db.models import Book, User
 from app.services import crud_book as book, log_event
-from app.api.deps import get_db, require_role
+from app.api.deps import get_db, require_role, TimedRoute
 from app import utils
+
 
 router = APIRouter(
     prefix="/books",
     tags=['Books']
 )
+router.route_class = TimedRoute
 
 @router.get("/", response_model=List[ShowBook])
 def list_books(
@@ -54,7 +56,7 @@ def list_books(
     )
     
     searched = book.list_like(db, **filters)
-    log_event(db,"book.searched", **filters)
+    log_event(db, EventType.BOOK_SEARCHED, ObjectType.BOOK, status_code=status.HTTP_200_OK, method="GET", **filters)
     return searched
 
 @router.post("/", response_model=ShowBook)
@@ -62,7 +64,7 @@ def create_book(payload: CreateBook, db: Session = Depends(get_db), current_user
     """Create a new book (admin only). Logs the creation event."""
     
     created = book.create(db, db_obj=book, obj_in=payload)
-    log_event(db,"book.created", current_user, book_id=created.id)
+    log_event(db, EventType.BOOK_CREATED, ObjectType.BOOK, current_user, status_code=status.HTTP_201_CREATED, method="POST",book_id=getattr(created.state, "id", None))
     return created
 
 @router.patch("/{book_id}", response_model=ShowBook)
@@ -71,10 +73,10 @@ def update_book(book_id: int, payload: UpdateBook, db: Session = Depends(get_db)
 
     obj = book.get(db, book_id)
     if not obj:
-        raise HTTPException(status_code=404, detail="Book not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
     
     updated = book.update(db, db_obj=obj, obj_in=payload)
-    log_event(db,"book.updated",current_user, book_id,  updated_fields=utils.changed_fields(payload))
+    log_event(db, EventType.BOOK_UPDATED, ObjectType.BOOK, current_user, status_code=status.HTTP_202_ACCEPTED, method="PATCH",updated_fields=utils.changed_fields(payload))
     return updated
     
 
@@ -88,6 +90,6 @@ def delete_book(book_id: int, db: Session = Depends(get_db), current_user: User 
     
     Book.remove(db, id=book_id)
 
-    log_event(db,"book.deleted",current_user, book_id)
+    log_event(db, EventType.BOOK_DELETED, ObjectType.BOOK, current_user, status_code=status.HTTP_204_NO_CONTENT, method="DELETE", book_id= book_id)
 
     return
