@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
 from typing import Any
+
+from fastapi.encoders import jsonable_encoder
 from app.services.base import CRUDBase
 from app.db.models.event import Event
 from app.schemas.events import EventBase
@@ -9,19 +11,8 @@ from app.db.models.user import User
 class CRUDEvent(CRUDBase[Event, EventBase, EventBase]):
     pass
 
-event = CRUDEvent(Event)
-
-def log_event(
-    db,
-    event_type: EventType,
-    user: User | None = None,
-    *,
-    duration_ms: int | None = None,
-    status_code: int | None = None,
-    method: str | None = None,
-    object_type: ObjectType | None = None,
-    **meta: Any,
-) -> Event:
+crud_event = CRUDEvent(Event)
+def log_event(db, event_type, *, user=None,duration_ms=None, status_code=None, method=None, object_type=None, **meta) -> Event:
     event_in = EventBase(
         event_type=event_type,
         object_type=object_type,
@@ -29,6 +20,6 @@ def log_event(
         status_code=status_code,
         method=method,
         user_id=(user.id if user else None),
-        meta_data=(meta or None),
+        meta_data=jsonable_encoder(meta) if meta is not None else None
     )
-    return event.create(db, obj_in=event_in)
+    return crud_event.create(db, obj_in=event_in)

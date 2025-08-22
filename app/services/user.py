@@ -5,7 +5,7 @@ from app.core import security
 
 class CRUDuser(CRUDBase[User, CreateUser, UpdateUser]):
         
-    def create(db, *, obj_in: CreateUser) -> User:
+    def create(self, db, *, obj_in: CreateUser) -> User:
             data = obj_in.model_dump(exclude={"password"})      
             plain = obj_in.password.get_secret_value()
             hashed = security.get_password_hash(plain)

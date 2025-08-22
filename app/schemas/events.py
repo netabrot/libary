@@ -11,7 +11,7 @@ class EventBase(BaseModel):
     method: str | None = None
     user_id: int | None = None
     meta_data: dict[str, Any] | None = None
-
+    duration_ms: int | None = None
     model_config = ConfigDict(extra="ignore")
 
 class ShowEvent(EventBase):

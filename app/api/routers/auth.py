@@ -29,6 +29,7 @@ from app.db.models import User
 from app.services import log_event
 from app.api.deps import TimedRoute, get_db, get_current_user
 from app.services import auth, user
+from app.services.user import crud_user
 from app.core.enums import EventType, ObjectType
 
 
@@ -44,8 +45,8 @@ def create_user(payload: CreateUser, db: Session = Depends(get_db)) -> Any:
     """Register a new user (defaults to role=member). Logs the creation event."""
     data = payload.model_dump() 
     data.setdefault("role", "member")
-    created = user.create(db, obj_in=payload)
-    log_event(db, EventType.USER_CREATED, ObjectType.USER, created, status_code=201, method="POST",)
+    created = crud_user.create(db, obj_in=payload)
+    log_event(db, EventType.USER_CREATED, object_type=ObjectType.USER, user=created, status_code=201, method="POST",)
     return created
 
 
@@ -53,7 +54,7 @@ def create_user(payload: CreateUser, db: Session = Depends(get_db)) -> Any:
 def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
     """Authenticate user via OAuth2 form and return JWT. Logs login event."""
     logged = auth.login(form_data,db)
-    log_event(db, EventType.USER_LOGGED_IN, ObjectType.USER, logged, status_code=201, method="POST",)
+    log_event(db, EventType.USER_LOGGED_IN, object_type=ObjectType.USER, user=logged, status_code=201, method="POST",)
     return logged
 
 

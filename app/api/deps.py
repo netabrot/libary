@@ -68,16 +68,12 @@ class TimedRoute(APIRoute):
         async def custom_route_handler(request: Request) -> Response:
             before = time.time()
             response: Response = await original_route_handler(request)
-            duration = time.time() - before
+            duration = int((time.time() - before)*1000)
             response.headers["X-Response-Time"] = str(duration)
             
             db = SessionLocal()
             try:
                 user = getattr(request.state, "user", None)
-                meta = {
-                    "path": request.url.path,
-                    "method": request.method,
-                    "user_id": request.headers.get("user_id")}
                 log_event(
                     db,
                     EventType.HTTP_COMPLETED,
@@ -85,11 +81,11 @@ class TimedRoute(APIRoute):
                     status_code=response.status_code,
                     method=request.method,
                     duration_ms=duration,
-                    **meta,
                 )
             except Exception:
                 db.rollback()
             finally:
                 db.close()
+            return response
 
         return custom_route_handler

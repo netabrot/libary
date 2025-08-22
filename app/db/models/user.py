@@ -19,7 +19,7 @@ class User(Base):
     address = Column(String)
     password = Column(String)
     role = Column(SAEnum(UserRole), default=UserRole.MEMBER)
-    is_active = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
 
     loans = relationship("Loan", back_populates="user", cascade="all, delete-orphan")
     events = relationship("Event", back_populates="user", cascade="all, delete-orphan")
