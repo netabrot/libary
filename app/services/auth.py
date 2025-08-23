@@ -5,6 +5,8 @@ from app.core.security import *
 
 from sqlalchemy.orm import Session
 
+from app.schemas.users import CreateUser
+
 def login(form_data: OAuth2PasswordRequestForm, db: Session):
     user = db.query(User).filter(
         User.email == form_data.username).first()
@@ -18,5 +20,10 @@ def login(form_data: OAuth2PasswordRequestForm, db: Session):
     access_token = create_access_token({"sub": user.id, "role": user.role})
     return {"access_token": access_token, "token_type": "bearer"}
 
-
-#TODO: Register
+def register(db, *, obj_in: CreateUser) -> User:
+            data = obj_in.model_dump(exclude={"password","role", "is_active"})      
+            plain = obj_in.password.get_secret_value()
+            hashed = get_password_hash(plain)
+            db_obj = User(**data, password=hashed, role="member", is_active=True)
+            db.add(db_obj); db.commit(); db.refresh(db_obj)
+            return db_obj

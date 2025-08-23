@@ -28,7 +28,7 @@ from app.schemas import (
 from app.db.models import User
 from app.services import log_event
 from app.api.deps import TimedRoute, get_db, get_current_user
-from app.services import auth, user
+from app.services import auth
 from app.services.user import crud_user
 from app.core.enums import EventType, ObjectType
 
@@ -44,8 +44,7 @@ router.route_class = TimedRoute
 def create_user(payload: CreateUser, db: Session = Depends(get_db)) -> Any:
     """Register a new user (defaults to role=member). Logs the creation event."""
     data = payload.model_dump() 
-    data.setdefault("role", "member")
-    created = crud_user.create(db, obj_in=payload)
+    created = auth.register(db, obj_in=payload)
     log_event(db, EventType.USER_CREATED, object_type=ObjectType.USER, user=created, status_code=201, method="POST",)
     return created
 
