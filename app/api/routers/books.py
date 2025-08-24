@@ -3,8 +3,7 @@ Books Router
 ------------
 
 This file defines the API endpo@router.patch("/{book_id}", response_model=ShowBook)
-def update_book(book_id: int, payload: UpdateBook, db: Session = Depends(get_db), current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))):
-    """Update an existing book's details (admin/librarian only). Logs the update event."""s for managing books in the library system.
+def Update an existing book's details (admin/librarian only). Logs the update events for managing books in the library system.
 
 Endpoints:
 - GET /books/        → List books with optional filters (id, title, author, year, genre, copies)
@@ -67,7 +66,7 @@ def create_book(payload: CreateBook, db: Session = Depends(get_db), current_user
     return created
 
 @router.patch("/{book_id}", response_model=ShowBook)
-def update_book(book_id: int, payload: UpdateBook, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
+def update_book(book_id: int, payload: UpdateBook, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.ADMIN))):
     """Update an existing book’s details (admin only). Logs the update event."""
 
     obj = book.get(db, book_id)
@@ -79,7 +78,7 @@ def update_book(book_id: int, payload: UpdateBook, db: Session = Depends(get_db)
     
 
 @router.delete("/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_book(book_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
+def delete_book(book_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.ADMIN))):
     """Delete a book by ID (admin only). Logs the deletion event."""
     
     obj = book.get(db, book_id)

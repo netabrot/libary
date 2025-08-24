@@ -65,9 +65,9 @@ def create_loan(payload: CreateLoan, db: Session = Depends(get_db), current_user
     """Create a new loan (admin/librarian only). Checks book availability."""
     book_obj = db.query(Book).filter(Book.id == payload.book_id).first()
     if not book_obj:
-        raise HTTPException(status_code=404, detail="Book not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
     if book_obj.available_copies <= 0:
-        raise HTTPException(status_code=400, detail="No available copies for this book")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No available copies for this book")
     created = loan.create_checkout(db, obj_in=payload)
     return created
 
@@ -76,7 +76,7 @@ def return_book(loan_id: int, db: Session = Depends(get_db), current_user: User 
     """Return a book by loan ID."""
     obj = loan.get(db, id=loan_id)
     if not obj:
-        raise HTTPException(status_code=404, detail="Loan not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Loan not found")
     return loan.return_book(db, obj_in=obj)
 
 @router.get("/active", response_model=ShowLoan)
@@ -84,7 +84,7 @@ def get_active_loan(book_id: int, member_id: int, db: Session = Depends(get_db),
     """Get active loan for a user/book combination."""
     active_loan = loan.get_active_loan(db, book_id=book_id, member_id=member_id)
     if not active_loan:
-        raise HTTPException(status_code=404, detail="No active loan found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No active loan found")
     return active_loan
 
 @router.patch("/{loan_id}", response_model=ShowLoan)
@@ -92,7 +92,7 @@ def update_loan(loan_id: int, payload: UpdateLoan, db: Session = Depends(get_db)
     """Update loan details (admin/librarian only)."""
     obj = loan.get(db, id=loan_id)
     if not obj:
-        raise HTTPException(status_code=404, detail="Loan not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Loan not found")
     
     updated = loan.update(db, db_obj=obj, obj_in=payload)
     return updated
@@ -102,6 +102,6 @@ def delete_loan(loan_id: int, db: Session = Depends(get_db), current_user: User 
     """Delete a loan by ID (admin/librarian only)."""
     obj = loan.get(db, id=loan_id)
     if not obj:
-        raise HTTPException(status_code=404, detail="Loan not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Loan not found")
     loan.remove(db, id=loan_id)
     return
