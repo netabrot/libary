@@ -27,14 +27,14 @@ from app.core.enums import EventType, ObjectType, UserRole
 from app.schemas import CreateLoan, UpdateLoan, ShowLoan
 from app.db.models import Book, User
 from app.services import crud_loan as loan, log_event
-from app.api.deps import get_db, require_role, TimedRoute
+from app.api.deps import get_db, require_role
 from app import utils
 
 router = APIRouter(
     prefix="/loans",
     tags=['Loans']
 )
-router.route_class = TimedRoute
+#router.route_class = TimedRoute
 
 @router.get("/", response_model=List[ShowLoan])
 def list_loans(
@@ -67,11 +67,9 @@ def create_loan(payload: CreateLoan, db: Session = Depends(get_db), current_user
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
     if book.available_copies <= 0:
-        log_event(db, EventType.LOAN_FAILED, object_type=ObjectType.LOAN, user=current_user, status_code=status.HTTP_400_BAD_REQUEST, method="POST",book_id=payload.book_id)
         raise HTTPException(status_code=400, detail="No available copies for this book")
     created = loan.create(db, obj_in=payload)
 
-    log_event(db, EventType.LOAN_CREATED, object_type=ObjectType.LOAN, user=current_user, status_code=status.HTTP_201_CREATED, method="POST",loan_id=created.id, book_id=payload.book_id)
     return created
 
 @router.patch("/{loan_id}", response_model=ShowLoan)
@@ -83,7 +81,6 @@ def update_loan(loan_id: int, payload: UpdateLoan, db: Session = Depends(get_db)
         raise HTTPException(status_code=404, detail="Loan not found")
     
     updated = loan.update(db, db_obj=obj, obj_in=payload)
-    log_event(db, EventType.LOAN_UPDATED, object_type=ObjectType.LOAN, user=current_user, status_code=status.HTTP_202_ACCEPTED, method="PATCH", book_id=updated.book_id,updated_fields=utils.changed_fields(payload))
     return updated
     
 
@@ -94,6 +91,5 @@ def delete_loan(loan_id: int, db: Session = Depends(get_db), current_user: User 
     if not obj:
         raise HTTPException(status_code=404, detail="Loan not found")
     loan.remove(db, id=loan_id)
-    log_event(db, EventType.LOAN_DELETED, object_type=ObjectType.LOAN, user=current_user, status_code=status.HTTP_204_NO_CONTENT, method="DELETE", loan_id=loan_id, book_id=obj.book_id)
 
     return

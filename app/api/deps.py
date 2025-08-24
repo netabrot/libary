@@ -16,13 +16,17 @@ from typing import Callable, Generator
 from fastapi import Depends, HTTPException, Request, Response, status
 from fastapi.routing import APIRoute
 from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError
 from sqlalchemy.orm import Session
+from starlette.middleware.base import BaseHTTPMiddleware
+
 
 from app.db.session import SessionLocal
 from app.db.models.user import User  
 from app.core.security import verify_token
 from app.core.enums import EventType, UserRole
 from app.services.event import log_event
+from app.utils import filters
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -61,31 +65,51 @@ def require_role(required_role: UserRole):
         return current_user
     return role_checker
 
-class TimedRoute(APIRoute):
-    def get_route_handler(self) -> Callable:
-        original_route_handler = super().get_route_handler()
+class ResponseTimeMiddleware(BaseHTTPMiddleware):
+    SKIP_PATHS = {"/", "/test"}
 
-        async def custom_route_handler(request: Request) -> Response:
-            before = time.time()
-            response: Response = await original_route_handler(request)
-            duration = int((time.time() - before)*1000)
-            response.headers["X-Response-Time"] = str(duration)
-            
-            db = SessionLocal()
-            try:
-                user = getattr(request.state, "user", None)
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path in self.SKIP_PATHS:
+            return await call_next(request)
+
+        start = time.perf_counter()
+        response: Response = await call_next(request)
+        duration_ms = int((time.perf_counter() - start) * 1000)
+        response.headers["X-Response-Time"] = str(duration_ms)
+
+        try:
+            user_id: int | None = None
+            auth = request.headers.get("authorization")
+            if auth and auth.startswith("Bearer "):
+                try:
+                    data = verify_token(auth.split(" ", 1)[1])
+                    if data and data.sub:
+                        user_id = int(data.sub)
+                except (JWTError, ValueError, TypeError):
+                    pass
+
+            meta = {
+                "path": request.url.path,
+                "method": request.method,
+                "query_params": str(request.query_params) or None,
+                "user_agent": request.headers.get("user-agent"),
+                "content_length": response.headers.get("content-length"),
+                "remote_addr": getattr(request.client, "host", None),
+            }
+            meta = filters(**meta)
+
+            with SessionLocal() as db:
                 log_event(
-                    db,
-                    EventType.HTTP_COMPLETED,
-                    user=user,
+                    db=db,
+                    event_type=EventType.HTTP_COMPLETED,
+                    user_id=user_id, 
                     status_code=response.status_code,
                     method=request.method,
-                    duration_ms=duration,
+                    duration_ms=duration_ms,
+                    meta=meta,
                 )
-            except Exception:
-                db.rollback()
-            finally:
-                db.close()
-            return response
+                db.commit()
+        except Exception:
+            pass
 
-        return custom_route_handler
+        return response

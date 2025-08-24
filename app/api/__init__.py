@@ -1,3 +1,3 @@
-from .deps import get_db, get_current_user, require_role, TimedRoute
+from .deps import get_db, get_current_user, require_role, ResponseTimeMiddleware
 
-__all__ = ["get_db", "get_current_user", "require_role", "TimedRoute"]
+__all__ = ["get_db", "get_current_user", "require_role", "ResponseTimeMiddleware"]
