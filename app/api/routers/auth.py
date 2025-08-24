@@ -21,9 +21,7 @@ from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app.schemas import (
-    CreateUser, ShowUser,
-)
+from app.schemas import SignupUser, ShowUser
 
 from app.db.models import User
 from app.services import log_event
@@ -41,11 +39,9 @@ router.route_class = TimedRoute
 
 
 @router.post("/signup", response_model=ShowUser, status_code=status.HTTP_201_CREATED)
-def create_user(payload: CreateUser, db: Session = Depends(get_db)) -> Any:
+def create_user(payload: SignupUser, db: Session = Depends(get_db)) -> Any:
     """Register a new user (defaults to role=member). Logs the creation event."""
-    data = payload.model_dump() 
     created = auth.register(db, obj_in=payload)
-    log_event(db, EventType.USER_CREATED, object_type=ObjectType.USER, user=created, status_code=201, method="POST",)
     return created
 
 
@@ -53,14 +49,8 @@ def create_user(payload: CreateUser, db: Session = Depends(get_db)) -> Any:
 def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
     """Authenticate user via OAuth2 form and return JWT. Logs login event."""
     logged = auth.login(form_data,db)
-    log_event(db, EventType.USER_LOGGED_IN, object_type=ObjectType.USER, user=logged, status_code=201, method="POST",)
+    user = db.query(User).filter(User.email == form_data.username).first()
+    log_event(db, EventType.USER_LOGGED_IN, object_type=ObjectType.USER, user=user, status_code=201, method="POST",)
     return logged
-
-
-@router.get("/me", response_model=ShowUser)
-def read_users_me(current_user: User = Depends(get_current_user)):
-    """Return details of the currently authenticated user."""
-    user = current_user
-    return user
 
 

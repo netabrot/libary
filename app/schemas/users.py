@@ -17,6 +17,14 @@ class CreateUser(UserBase):
     """Body for POST /users"""
     password: SecretStr
 
+class SignupUser(BaseModel):
+    """Body for POST /auth/signup (self-registration)"""
+    full_name: str
+    email: EmailStr
+    phone_number: str
+    password: SecretStr
+    address: str | None = None
+
 class UpdateUser(BaseModel):
     full_name: str| None = None
     email: EmailStr | None = None
@@ -34,3 +42,4 @@ class ShowUser(UserBase):
     events: list[ShowEvent] = Field(default_factory=list)
     model_config = ConfigDict(from_attributes=True)
 
+#TODO email/phone validation

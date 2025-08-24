@@ -26,13 +26,13 @@ def verify_password(plain_password, hashed_password) -> bool:
     """Check if plain password matches the stored hash."""
     return pwd_cxt.verify(plain_password,hashed_password)
 
-def create_access_token(data: dict) -> str:
-    """Generate a JWT access token with expiry."""
-    to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-    return encoded_jwt
+def create_access_token(subject: str, expires_delta: timedelta | None = None, additional_claims: dict | None = None):
+    """Create access token."""
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode = {"exp": expire, "sub": subject}
+    if additional_claims:
+        to_encode.update({k: v for k, v in additional_claims.items() if k != "sub"})
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
 def verify_token(token: str, credentials_exception) -> TokenPayload:
