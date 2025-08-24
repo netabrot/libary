@@ -64,9 +64,9 @@ def create_order(payload: CreateBookOrder, db: Session = Depends(get_db),
 
     except ValueError as e:
         if "not found" in str(e):
-            raise HTTPException(status_code=404, detail=str(e))
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
         else:
-            raise HTTPException(status_code=400, detail=str(e))
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
 @router.delete("/{order_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -77,13 +77,13 @@ def delete_order(order_id: int, db: Session = Depends(get_db), current_user: Use
             order.cancel_order(db, order_id=order_id, user_id=current_user.id)
         except ValueError as e:
             if "not found" in str(e):
-                raise HTTPException(status_code=404, detail=str(e))
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
             else:
-                raise HTTPException(status_code=400, detail=str(e))
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     else:
         obj = order.get(db, id=order_id)
         if not obj:
-            raise HTTPException(status_code=404, detail="Order not found")
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found")
         order.remove(db, id=order_id)
 
     return

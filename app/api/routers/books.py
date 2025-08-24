@@ -88,7 +88,7 @@ def delete_book(book_id: int, db: Session = Depends(get_db),
 
     obj = book.get(db, book_id)
     if not obj:
-        raise HTTPException(status_code=404, detail="Book not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
 
     book.remove(db, id=book_id)
     return

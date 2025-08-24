@@ -1,20 +1,11 @@
-# Python
 __pycache__/
 *.pyc
 *.pyo
-
-# Database
 library.db
 *.db
-
-# Testing
 .pytest_cache/
-
-# Environment
 .env
 venv/
 .venv/
-
-# IDE
 .vscode/
 .idea/

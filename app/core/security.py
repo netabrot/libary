@@ -34,7 +34,7 @@ def verify_password(plain_password, hashed_password) -> bool:
 
 def create_access_token(subject: str, expires_delta: timedelta | None = None, additional_claims: dict | None = None):
     """Create access token."""
-    expire = datetime.datetime.now() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    expire = datetime.now() + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode = {"exp": expire, "sub": subject}
     if additional_claims:
         to_encode.update({k: v for k, v in additional_claims.items() if k != "sub"})
@@ -48,7 +48,11 @@ def verify_token(token: str) -> TokenPayload:
         sub: str = payload.get("sub")
         role: str = payload.get("role")
         if sub is None:
-            raise credentials_exception
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         token_data = TokenPayload(sub=sub, role=role)
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,

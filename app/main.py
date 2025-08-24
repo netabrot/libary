@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-
 from app.api.deps import ResponseTimeMiddleware
 from app.db.session import Base, engine
 from app.api.routers import auth as auth_router
@@ -23,7 +22,7 @@ def main() -> None:
     app.include_router(loans_router.router)
     app.include_router(orders_router.router)
     app.include_router(statistics_router.router)
-    uvicorn.run(app, port=8000)
+    return app
 
 if __name__ == "__main__":
     main()

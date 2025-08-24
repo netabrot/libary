@@ -49,7 +49,7 @@ class LibraryStatisticsService:
 
         available_books = max(0, total_books - books_on_loan)
 
-        today = datetime.datetime.now().date()
+        today = datetime.now().date()
         overdue_loans = self.db.query(Loan).join(User).filter(
             User.is_active == True,
             and_(
@@ -128,7 +128,7 @@ class LibraryStatisticsService:
             Loan.return_date.is_(None)
         ).distinct().count()
 
-        month_start = datetime.datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_start = datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         new_users_this_month = self.db.query(User).filter(
             User.is_active == True,
             User.join_date >= month_start.date()
@@ -150,7 +150,7 @@ class LibraryStatisticsService:
             } for full_name, email, count in top_borrowers_query
         ]
 
-        today = datetime.datetime.now().date()
+        today = datetime.now().date()
         users_with_overdue = self.db.query(User.id).join(Loan).filter(
             User.is_active == True,
             and_(
@@ -174,7 +174,7 @@ class LibraryStatisticsService:
         Returns:
             OperationalStats: Today's operational metrics
         """
-        today = datetime.datetime.now().date()
+        today = datetime.now().date()
 
         loans_today = self.db.query(Loan).join(User).filter(
             User.is_active == True,
@@ -191,7 +191,7 @@ class LibraryStatisticsService:
             BookOrder.status == OrderStatus.WAITING
         ).count()
 
-        last_24h = datetime.datetime.now() - timedelta(hours=24)
+        last_24h = datetime.now() - timedelta(hours=24)
         system_events_today = self.db.query(Event).filter(
             Event.timestamp >= last_24h
         ).count()

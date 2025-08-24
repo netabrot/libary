@@ -13,11 +13,13 @@ def login(form_data: OAuth2PasswordRequestForm, db: Session):
     user = crud_user.get_by(db, email=form_data.username)
 
     if not user or not verify_password(form_data.password, user.password):
+        print(f"{user.password}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
 
     access_token = create_access_token(subject=str(user.id))
     return {"access_token": access_token, "token_type": "bearer"}

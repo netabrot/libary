@@ -12,45 +12,49 @@ Functions:
 """
 
 import time
-
+from typing import Generator
 from fastapi import Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.core.enums import UserRole
-from app.core.security import verify_token
-from app.db import get_db
-from app.db.models import User
+
 from app.db.session import SessionLocal
+from app.db.models import User    
+from app.db import get_db    
+from app.core.security import verify_token
+from app.core.enums import UserRole
 from app.services.event import log_event
 from app.utils import filters
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
 def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:
     """Validate JWT token and return the current active user."""
-    token_data = verify_token(token)
+    print("e")
+    token_data = verify_token(token) 
+    print("f")
     user = db.query(User).filter(User.id == int(token_data.sub)).first()
+    print("g")
     if not user.is_active:
+        print("oh no")
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user")
+    print("yay")
     return user
-
 
 def require_role(required_role: UserRole):
     def role_checker(current_user: User = Depends(get_current_user)):
         """Ensure the current user has the required role."""
         if current_user.role != required_role:
             raise HTTPException(
-                status_code=403,
+                status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"{required_role.value} only"
             )
         return current_user
-
     return role_checker
-
 
 def require_roles(allowed_roles: list[UserRole]):
     def role_checker(current_user: User = Depends(get_current_user)):
@@ -62,9 +66,7 @@ def require_roles(allowed_roles: list[UserRole]):
                 detail=f"{roles_str} only"
             )
         return current_user
-
     return role_checker
-
 
 class ResponseTimeMiddleware(BaseHTTPMiddleware):
     SKIP_PATHS = {"/", "/test"}
@@ -102,7 +104,7 @@ class ResponseTimeMiddleware(BaseHTTPMiddleware):
             with SessionLocal() as db:
                 log_event(
                     db=db,
-                    user_id=user_id,
+                    user_id=user_id, 
                     status_code=response.status_code,
                     method=request.method,
                     duration_ms=duration_ms,

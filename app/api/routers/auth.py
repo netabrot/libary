@@ -43,6 +43,7 @@ def create_user(payload: SignupUser, db: Session = Depends(get_db)) -> Any:
 def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
     """Authenticate user via OAuth2 form and return JWT. Logs login event."""
     logged = auth.login(form_data, db)
+    print("check")
     return logged
 
 

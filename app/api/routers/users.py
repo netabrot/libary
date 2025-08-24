@@ -71,11 +71,11 @@ def update_user(user_id: int, payload: UpdateUser, db: Session = Depends(get_db)
     """Update user details (admin only). Prevents role escalation."""
     obj = user.get(db, user_id)
     if not obj:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     if obj.role != UserRole.ADMIN and user_id != obj.user_id:
-        raise HTTPException(status_code=403, detail="Only Admin")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Admin")
     if payload.role == UserRole.ADMIN and obj.role != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Only Admin")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Only Admin")
     updated = user.update(db, db_obj=obj, obj_in=payload)
     return updated
 
@@ -86,10 +86,10 @@ def delete_User(user_id: int, db: Session = Depends(get_db),
     """Delete a user (admin only). Restricted by role rules."""
     obj = user.get(db, user_id)
     if not obj:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
     if current_user.role != UserRole.ADMIN and current_user.id != obj.id:
-        raise HTTPException(status_code=403, detail="Permission denied")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Permission denied")
 
     user.remove(db, id=user_id)
     return

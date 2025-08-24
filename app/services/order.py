@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from sqlalchemy import desc
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.enums import OrderStatus
 from app.db.models.order import BookOrder
@@ -13,18 +13,24 @@ from . import crud_book
 class CRUDOrder(CRUDBase[BookOrder, CreateBookOrder, ShowBookOrder]):
     def get_user_orders(self, db: Session, user_id: int) -> List[BookOrder]:
         """Get all orders for a specific user."""
-        return db.query(self.model).filter(self.model.user_id == user_id).order_by(desc(self.model.order_date)).all()
+        return db.query(self.model).options(joinedload(self.model.book)).filter(
+            self.model.user_id == user_id
+        ).order_by(desc(self.model.order_date)).all()
 
     def get_waiting_orders_by_book(self, db: Session, book_id: int) -> List[BookOrder]:
         """Get waiting orders for a specific book, ordered by priority and date."""
-        return db.query(self.model).filter(self.model.book_id == book_id,
-                                           self.model.status == OrderStatus.WAITING).order_by(
-            desc(self.model.priority), self.model.order_date).all()
+        return db.query(self.model).options(joinedload(self.model.book)).filter(
+            self.model.book_id == book_id,
+            self.model.status == OrderStatus.WAITING
+        ).order_by(desc(self.model.priority), self.model.order_date).all()
 
     def get_user_order_for_book(self, db: Session, user_id: int, book_id: int) -> Optional[BookOrder]:
         """Check if user has an active order for a specific book."""
-        return db.query(self.model).filter(self.model.user_id == user_id, self.model.book_id
-                                           == book_id, self.model.status == OrderStatus.WAITING).first()
+        return db.query(self.model).options(joinedload(self.model.book)).filter(
+            self.model.user_id == user_id,
+            self.model.book_id == book_id,
+            self.model.status == OrderStatus.WAITING
+        ).first()
 
     def create_order_by_title(self, db: Session, *, user_id: int, book_title: str) -> BookOrder:
         """Create a new order by searching for book title."""
@@ -52,6 +58,9 @@ class CRUDOrder(CRUDBase[BookOrder, CreateBookOrder, ShowBookOrder]):
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
+        
+        # Load the book relationship for the response
+        db.refresh(db_obj, ['book'])
         return db_obj
 
     def cancel_order(self, db: Session, *, order_id: int, user_id: int) -> BookOrder:
