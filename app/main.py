@@ -9,7 +9,7 @@ from app.api.routers import orders as orders_router
 from app.api.routers import statistics as statistics_router
 
 
-def main() -> None:
+def main():
     """Main application entry point."""
     app = FastAPI()
     app.add_middleware(ResponseTimeMiddleware)
