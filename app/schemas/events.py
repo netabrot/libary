@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Any
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -10,6 +11,7 @@ class EventBase(BaseModel):
     meta_data: dict[str, Any] | None = None
     duration_ms: int | None = None
     model_config = ConfigDict(extra="ignore")
+
 
 class ShowEvent(EventBase):
     id: int

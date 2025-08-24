@@ -1,6 +1,6 @@
-from pydantic import BaseModel, ConfigDict
 from typing import Dict, Any, List
-from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict
 
 
 class StatisticsBase(BaseModel):
@@ -16,7 +16,7 @@ class LibraryOverview(StatisticsBase):
     available_books: int
     books_on_loan: int
     overdue_loans: int
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -27,7 +27,7 @@ class BookStatistics(StatisticsBase):
     most_borrowed_books: List[Dict[str, Any]]
     available_books: int
     books_on_loan: int
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -38,7 +38,7 @@ class UserStatistics(StatisticsBase):
     new_users_this_month: int
     top_borrowers: List[Dict[str, Any]]
     users_with_overdue: int
-    
+
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -48,5 +48,5 @@ class OperationalStats(StatisticsBase):
     returns_today: int
     new_orders: int
     system_events_today: int
-    
+
     model_config = ConfigDict(from_attributes=True)

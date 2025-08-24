@@ -20,71 +20,76 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.enums import UserRole
-from app.schemas import CreateUser, UpdateUser, ShowUser
-from app.db.models import User
-from app.services import crud_user as user
-from app.api.deps import require_role 
 from app import utils
+from app.api.deps import require_role
+from app.core.enums import UserRole
 from app.db import get_db
-
+from app.db.models import User
+from app.schemas import CreateUser, UpdateUser, ShowUser
+from app.services import crud_user as user
 
 router = APIRouter(
     prefix="/users",
     tags=['Users']
 )
 
+
 @router.get("/", response_model=List[ShowUser])
 def list_users(
-    id: int | None = None,
-    full_name: str | None = None,
-    email: str | None = None,
-    phone_number: str | None = None,
-    address: str | None = None,
-    db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
-        """List users with optional filters (admin only)."""
+        id: int | None = None,
+        full_name: str | None = None,
+        email: str | None = None,
+        phone_number: str | None = None,
+        address: str | None = None,
+        db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
+    """List users with optional filters (admin only)."""
 
-        filters = utils.filters(
-            id= id,
-            full_name= full_name,
-            email= email,
-            phone_number= phone_number,
-            address= address,
-        )
-        searched = user.list_like(db, **filters)
+    filters = utils.filters(
+        id=id,
+        full_name=full_name,
+        email=email,
+        phone_number=phone_number,
+        address=address,
+    )
+    searched = user.list_like(db, **filters)
 
-        return searched
-        
+    return searched
+
+
 @router.post("/", response_model=List[ShowUser])
-def create_user(payload: CreateUser, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))) -> Any:
+def create_user(payload: CreateUser, db: Session = Depends(get_db),
+                current_user: User = Depends(require_role(UserRole.ADMIN))) -> Any:
     """Create a new user (admin only). Logs the creation event."""
     created = user.create(db, obj_in=payload)
 
     return created
 
+
 @router.put("/{user_id}", response_model=ShowUser)
-def update_user(user_id: int, payload: UpdateUser, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
+def update_user(user_id: int, payload: UpdateUser, db: Session = Depends(get_db),
+                current_user: User = Depends(require_role(UserRole.ADMIN))):
     """Update user details (admin only). Prevents role escalation."""
     obj = user.get(db, user_id)
     if not obj:
         raise HTTPException(status_code=404, detail="User not found")
     if obj.role != UserRole.ADMIN and user_id != obj.user_id:
-            raise HTTPException(status_code=403, detail="Only Admin")
+        raise HTTPException(status_code=403, detail="Only Admin")
     if payload.role == UserRole.ADMIN and obj.role != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Only Admin") 
+        raise HTTPException(status_code=403, detail="Only Admin")
     updated = user.update(db, db_obj=obj, obj_in=payload)
     return updated
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_User(user_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
+def delete_User(user_id: int, db: Session = Depends(get_db),
+                current_user: User = Depends(require_role(UserRole.ADMIN))):
     """Delete a user (admin only). Restricted by role rules."""
     obj = user.get(db, user_id)
     if not obj:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     if current_user.role != UserRole.ADMIN and current_user.id != obj.id:
         raise HTTPException(status_code=403, detail="Permission denied")
-    
+
     user.remove(db, id=user_id)
     return

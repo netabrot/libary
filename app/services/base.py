@@ -10,6 +10,7 @@ ModelType = TypeVar("ModelType", bound=Base)
 CreateSchemaType = TypeVar("CreateSchemaType", bound=BaseModel)
 UpdateSchemaType = TypeVar("UpdateSchemaType", bound=BaseModel)
 
+
 class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def __init__(self, model: Type[ModelType]):
         """
@@ -23,17 +24,15 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def get(self, db: Session, id: Any) -> Optional[ModelType]:
         obj = db.get(self.model, id)
         return obj
-    
-    def get_by(self, db:Session, **filters) -> Optional[ModelType]:
-        return db.query(self.model).filter_by(**filters).first()
 
+    def get_by(self, db: Session, **filters) -> Optional[ModelType]:
+        return db.query(self.model).filter_by(**filters).first()
 
     def list_like(self, db: Session, **likes) -> List[ModelType]:
         q = db.query(self.model)
         for col, val in likes.items():
             q = q.filter(getattr(self.model, col).ilike(f"%{val}%"))
         return q.all()
-
 
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data = jsonable_encoder(obj_in)
@@ -44,11 +43,11 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj
 
     def update(
-        self,
-        db: Session,
-        *,
-        db_obj: ModelType,
-        obj_in: Union[UpdateSchemaType, Dict[str, Any]]
+            self,
+            db: Session,
+            *,
+            db_obj: ModelType,
+            obj_in: Union[UpdateSchemaType, Dict[str, Any]]
     ) -> ModelType:
         obj_data = jsonable_encoder(db_obj)
         if isinstance(obj_in, dict):

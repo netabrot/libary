@@ -1,17 +1,19 @@
-
-from .loans import PublicLoan
 from pydantic import BaseModel, Field, ConfigDict
 
-class BookBase(BaseModel):
+from .loans import PublicLoan
 
+
+class BookBase(BaseModel):
     title: str
     author: str
-    published_year: int 
+    published_year: int
     genre: str | None = None
-    available_copies: int 
+    available_copies: int
+
 
 class CreateBook(BookBase):
     pass
+
 
 class UpdateBook(BaseModel):
     title: str | None = None
@@ -20,7 +22,8 @@ class UpdateBook(BaseModel):
     genre: str | None = None
     available_copies: int | None = None
 
+
 class ShowBook(BookBase):
     id: int
-    loans: list[PublicLoan] = Field(default_factory=list) 
+    loans: list[PublicLoan] = Field(default_factory=list)
     model_config = ConfigDict(from_attributes=True)

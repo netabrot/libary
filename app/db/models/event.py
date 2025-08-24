@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from app.db import Base
 
+
 class Event(Base):
     """System log/event: what happened and when (optionally linked to a User)."""
 
@@ -20,7 +21,3 @@ class Event(Base):
     user = relationship("User", back_populates="events")
 
     meta_data = Column(JSON, nullable=True)
-
-
-
-    

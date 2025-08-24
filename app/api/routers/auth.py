@@ -20,13 +20,11 @@ from fastapi import APIRouter, Depends, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app.schemas import SignupUser, ShowUser
-
-from app.db.models import User
 from app.api.deps import get_current_user
-from app.services import auth
 from app.db import get_db
-
+from app.db.models import User
+from app.schemas import SignupUser, ShowUser
+from app.services import auth
 
 router = APIRouter(
     prefix="/auth",
@@ -52,5 +50,3 @@ def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = 
 def get_current_user_info(current_user: User = Depends(get_current_user)) -> Any:
     """Get the currently logged-in user's details."""
     return current_user
-
-

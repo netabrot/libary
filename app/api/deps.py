@@ -12,34 +12,32 @@ Functions:
 """
 
 import time
-from typing import Generator
+
 from fastapi import Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
 from starlette.middleware.base import BaseHTTPMiddleware
 
-
-from app.db.session import SessionLocal
-from app.db.models import User    
-from app.db import get_db    
-from app.core.security import verify_token
 from app.core.enums import UserRole
+from app.core.security import verify_token
+from app.db import get_db
+from app.db.models import User
+from app.db.session import SessionLocal
 from app.services.event import log_event
 from app.utils import filters
-
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
 
-
 def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)) -> User:
     """Validate JWT token and return the current active user."""
-    token_data = verify_token(token) 
+    token_data = verify_token(token)
     user = db.query(User).filter(User.id == int(token_data.sub)).first()
     if not user.is_active:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user")
     return user
+
 
 def require_role(required_role: UserRole):
     def role_checker(current_user: User = Depends(get_current_user)):
@@ -50,7 +48,9 @@ def require_role(required_role: UserRole):
                 detail=f"{required_role.value} only"
             )
         return current_user
+
     return role_checker
+
 
 def require_roles(allowed_roles: list[UserRole]):
     def role_checker(current_user: User = Depends(get_current_user)):
@@ -62,7 +62,9 @@ def require_roles(allowed_roles: list[UserRole]):
                 detail=f"{roles_str} only"
             )
         return current_user
+
     return role_checker
+
 
 class ResponseTimeMiddleware(BaseHTTPMiddleware):
     SKIP_PATHS = {"/", "/test"}
@@ -100,7 +102,7 @@ class ResponseTimeMiddleware(BaseHTTPMiddleware):
             with SessionLocal() as db:
                 log_event(
                     db=db,
-                    user_id=user_id, 
+                    user_id=user_id,
                     status_code=response.status_code,
                     method=request.method,
                     duration_ms=duration_ms,

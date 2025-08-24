@@ -10,22 +10,27 @@ Functions:
 - create_access_token(data)    → issue JWT with expiry
 - verify_token(token, exc)     → decode JWT and return TokenPayload
 """
-from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from jose import JWTError, jwt
-from app.schemas.token import TokenPayload
-from app.core.config import settings
+
 from fastapi import HTTPException, status
+from jose import JWTError, jwt
+from passlib.context import CryptContext
+
+from app.core.config import settings
+from app.schemas.token import TokenPayload
 
 pwd_cxt = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 
 def get_password_hash(password: str) -> str:
     """Hash a plain password using bcrypt."""
     return pwd_cxt.hash(password)
 
+
 def verify_password(plain_password, hashed_password) -> bool:
     """Check if plain password matches the stored hash."""
-    return pwd_cxt.verify(plain_password,hashed_password)
+    return pwd_cxt.verify(plain_password, hashed_password)
+
 
 def create_access_token(subject: str, expires_delta: timedelta | None = None, additional_claims: dict | None = None):
     """Create access token."""
@@ -47,6 +52,6 @@ def verify_token(token: str) -> TokenPayload:
         token_data = TokenPayload(sub=sub, role=role)
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},)    
+                            detail="Could not validate credentials",
+                            headers={"WWW-Authenticate": "Bearer"}, )
     return token_data
