@@ -10,7 +10,6 @@ class Event(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     timestamp = Column(DateTime(timezone=True), server_default=func.now(), index=True)
-    event_type = Column(String, index=True)
     object_type = Column(String, index=True, nullable=True)
     duration_ms = Column(Integer, nullable=True)
 

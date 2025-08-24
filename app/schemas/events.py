@@ -2,11 +2,8 @@ from datetime import datetime
 from typing import Any
 from pydantic import BaseModel, ConfigDict
 
-from app.core.enums import EventType, ObjectType
 
 class EventBase(BaseModel):
-    event_type: EventType
-    object_type: ObjectType | None = None
     status_code: int | None = None
     method: str | None = None
     user_id: int | None = None

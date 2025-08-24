@@ -12,9 +12,8 @@ Functions:
 """
 
 import time
-from typing import Callable, Generator
+from typing import Generator
 from fastapi import Depends, HTTPException, Request, Response, status
-from fastapi.routing import APIRoute
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError
 from sqlalchemy.orm import Session
@@ -24,7 +23,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.db.session import SessionLocal
 from app.db.models.user import User  
 from app.core.security import verify_token
-from app.core.enums import EventType, UserRole
+from app.core.enums import UserRole
 from app.services.event import log_event
 from app.utils import filters
 
@@ -101,7 +100,6 @@ class ResponseTimeMiddleware(BaseHTTPMiddleware):
             with SessionLocal() as db:
                 log_event(
                     db=db,
-                    event_type=EventType.HTTP_COMPLETED,
                     user_id=user_id, 
                     status_code=response.status_code,
                     method=request.method,

@@ -5,7 +5,6 @@ from fastapi.encoders import jsonable_encoder
 from app.services.base import CRUDBase
 from app.db.models.event import Event
 from app.schemas.events import EventBase
-from app.core.enums import EventType, ObjectType
 from app.db.models.user import User
 
 class CRUDEvent(CRUDBase[Event, EventBase, EventBase]):

@@ -21,10 +21,10 @@ from typing import Any, List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.enums import EventType, ObjectType, UserRole
+from app.core.enums import UserRole
 from app.schemas import CreateUser, UpdateUser, ShowUser
 from app.db.models import User
-from app.services import crud_user as user, log_event
+from app.services import crud_user as user
 from app.api.deps import get_db, require_role 
 from app import utils
 
@@ -33,7 +33,6 @@ router = APIRouter(
     prefix="/users",
     tags=['Users']
 )
-#router.route_class = TimedRoute
 
 @router.get("/", response_model=List[ShowUser])
 def list_users(

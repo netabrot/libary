@@ -2,6 +2,7 @@ from .users import ShowUser, CreateUser, UpdateUser, SignupUser
 from .books import ShowBook, CreateBook, UpdateBook
 from .loans import ShowLoan, CreateLoan, UpdateLoan
 from .events import ShowEvent, EventBase
+from .order import CreateBookOrder, ShowBookOrder
 from .token import Token, TokenPayload
 
 __all__ = [
@@ -9,6 +10,7 @@ __all__ = [
     "ShowBook", "CreateBook", "UpdateBook",
     "ShowLoan", "CreateLoan", "UpdateLoan",
     "ShowEvent", "EventBase",
+    "CreateBookOrder", "ShowBookOrder",
     "Token", "TokenPayload",
 ]
 

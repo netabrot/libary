@@ -21,7 +21,7 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.enums import EventType, UserRole, ObjectType
+from app.core.enums import UserRole
 from app.schemas import CreateBook, UpdateBook, ShowBook
 from app.db.models import Book, User
 from app.services import crud_book as book, log_event
@@ -33,7 +33,6 @@ router = APIRouter(
     prefix="/books",
     tags=['Books']
 )
-#router.route_class = TimedRoute
 
 @router.get("/", response_model=List[ShowBook])
 def list_books(

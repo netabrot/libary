@@ -23,3 +23,4 @@ class User(Base):
 
     loans = relationship("Loan", back_populates="user", cascade="all, delete-orphan")
     events = relationship("Event", back_populates="user", cascade="all, delete-orphan")
+    book_orders = relationship("BookOrder", back_populates="user", cascade="all, delete-orphan")

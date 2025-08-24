@@ -3,5 +3,7 @@ __pycache__/
 *.pyc
 *.db
 .env
-seed.py
 test.py
+run_tests.bat
+test_api.py
+test_fastapi.py

@@ -13,5 +13,7 @@ class Book(Base):
     published_year = Column(Integer, index=True)
     genre = Column(String)
     total_copies = Column(Integer,nullable=False, default=1, server_default=text("1"))
+    available_copies = Column(Integer,nullable=False, default=1, server_default=text("1"))
 
     loans = relationship("Loan", back_populates="book", cascade="all, delete-orphan")
+    orders = relationship("BookOrder", back_populates="book", cascade="all, delete-orphan")
