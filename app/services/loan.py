@@ -41,15 +41,11 @@ class CRUDloan(CRUDBase[Loan, CreateLoan, UpdateLoan]):
         db.refresh(loan)
         return loan
     
-    def get_active_loan(self, db: Session, *, user_id: int, book_id: int) -> Optional[Loan]:
-        """Get active loan for a user/book combination."""
-        return db.query(Loan).filter(
-            and_(
-                Loan.user_id == user_id,
-                Loan.book_id == book_id,
-                Loan.return_date == None
-            )
-        ).first()
+    def get_active_loan(self, db: Session, book_id: int | None = None) -> Optional[List[Loan]]:
+        """Get active loans"""
+        if book_id:
+            return db.query(Loan).filter(and_(Loan.return_date == None, Loan.book_id == book_id)).all()
+        return db.query(Loan).filter(Loan.return_date == None).all()
     
     def get_user_loans(self, db: Session, user_id: int, active_only: bool = False) -> List[Loan]:
         """Get all loans for a user."""

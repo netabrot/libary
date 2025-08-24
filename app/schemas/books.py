@@ -1,5 +1,5 @@
 
-from .loans import ShowLoan
+from .loans import PublicLoan
 from pydantic import BaseModel, Field, ConfigDict
 
 class BookBase(BaseModel):
@@ -22,5 +22,5 @@ class UpdateBook(BaseModel):
 
 class ShowBook(BookBase):
     id: int
-    loans: list[ShowLoan] = Field(default_factory=list) 
+    loans: list[PublicLoan] = Field(default_factory=list) 
     model_config = ConfigDict(from_attributes=True)

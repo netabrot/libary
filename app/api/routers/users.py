@@ -7,13 +7,12 @@ Manages user accounts in the system.
 Endpoints:
 - GET /users/         → List users with optional filters (admin only)
 - POST /users/        → Create a new user (admin only)
-- PATCH /users/{id}   → Update user details (admin only, with role restrictions)
+- PUT /users/{id}   → Update user details (admin only, with role restrictions)
 - DELETE /users/{id}  → Delete a user (admin only, with role restrictions)
 
 Notes:
 - Admin-only actions enforced via `require_role(UserRole.ADMIN)`.
 - Extra security: prevents privilege escalation (non-admins can’t make themselves admin).
-- All actions are logged with `log_event`.
 """
 
 from typing import Any, List
@@ -25,8 +24,9 @@ from app.core.enums import UserRole
 from app.schemas import CreateUser, UpdateUser, ShowUser
 from app.db.models import User
 from app.services import crud_user as user
-from app.api.deps import get_db, require_role 
+from app.api.deps import require_role 
 from app import utils
+from app.db import get_db
 
 
 router = APIRouter(
@@ -62,7 +62,7 @@ def create_user(payload: CreateUser, db: Session = Depends(get_db), current_user
 
     return created
 
-@router.patch("/{user_id}", response_model=ShowUser)
+@router.put("/{user_id}", response_model=ShowUser)
 def update_user(user_id: int, payload: UpdateUser, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
     """Update user details (admin only). Prevents role escalation."""
     obj = user.get(db, user_id)
@@ -82,8 +82,9 @@ def delete_User(user_id: int, db: Session = Depends(get_db), current_user: User 
     obj = user.get(db, user_id)
     if not obj:
         raise HTTPException(status_code=404, detail="User not found")
-    if obj.role != UserRole.ADMIN and user_id != obj.user_id:
-            raise HTTPException(status_code=403, detail="Only Admin")
+    
+    if current_user.role != UserRole.ADMIN and current_user.id != obj.id:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    
     user.remove(db, id=user_id)
-
     return

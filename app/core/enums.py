@@ -25,8 +25,3 @@ class OrderStatus(str, Enum):
     WAITING = "waiting"
     FULFILLED = "fulfilled"
     CANCELLED = "cancelled"
-
-class LoanStatus(str, Enum):
-    ACTIVE = "active"
-    RETURNED = "returned"
-    OVERDUE = "overdue"

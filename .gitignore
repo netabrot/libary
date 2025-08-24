@@ -1,9 +1,20 @@
-.venv/
+# Python
 __pycache__/
 *.pyc
+*.pyo
+
+# Database
+library.db
 *.db
+
+# Testing
+.pytest_cache/
+
+# Environment
 .env
-test.py
-run_tests.bat
-test_api.py
-test_fastapi.py
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/

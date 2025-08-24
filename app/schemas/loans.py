@@ -21,3 +21,12 @@ class UpdateLoan(BaseModel):
 class ShowLoan(LoanBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
+
+class PublicLoan(BaseModel):
+    """Loan information without user_id for public book display."""
+    id: int
+    book_id: int
+    borrow_date: date
+    due_date: date
+    return_date: date | None = None
+    model_config = ConfigDict(from_attributes=True)

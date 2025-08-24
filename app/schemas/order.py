@@ -4,8 +4,8 @@ from app.core.enums import OrderStatus
 
 class BookOrderBase(BaseModel):
     book_title: str  
-    notify_preference: str = "email"
-
+    priority: int
+    status: OrderStatus = OrderStatus.WAITING
 class CreateBookOrder(BookOrderBase):
     pass
 
@@ -17,6 +17,5 @@ class ShowBookOrder(BaseModel):
     order_date: datetime
     priority: int
     status: OrderStatus
-    notify_preference: str
     
     model_config = ConfigDict(from_attributes=True)

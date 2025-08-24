@@ -7,12 +7,11 @@ This file defines the API endpoints for managing book orders and waiting lists.
 Endpoints:
 - GET /orders/         → List orders with optional filters (user orders or all for admin/librarian)
 - POST /orders/        → Create a new book order (member+)
-- PATCH /orders/{id}   → Update order details (admin/librarian only)
+- PUT /orders/{id}   → Update order details (admin/librarian only)
 - DELETE /orders/{id}  → Cancel/delete an order (owner or admin/librarian)
 
 Notes:
 - Admin/Librarian actions require authentication and role checks.
-- Each action logs an event with `log_event`.
 - Database sessions are provided via `Depends(get_db)`.
 """
 
@@ -25,8 +24,8 @@ from app.core.enums import UserRole
 from app.schemas import CreateBookOrder, ShowBookOrder
 from app.db.models import User
 from app.services import crud_order as order
-from app.api.deps import get_db, get_current_user, require_role
-from app import utils
+from app.api.deps import get_current_user, require_role
+from app.db import get_db
 
 router = APIRouter(
     prefix="/orders",
@@ -57,7 +56,6 @@ def create_order(payload: CreateBookOrder, db: Session = Depends(get_db), curren
             db, 
             user_id=current_user.id,
             book_title=payload.book_title,
-            notify_preference=payload.notify_preference
         )
         return created
         
@@ -105,7 +103,6 @@ def get_waiting_list(
                 "user_email": order_obj.user.email,
                 "order_date": order_obj.order_date,
                 "position": idx + 1,
-                "notify_preference": order_obj.notify_when_available
             }
             for idx, order_obj in enumerate(waiting_orders)
         ]

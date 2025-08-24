@@ -7,10 +7,10 @@ from app.core.security import *
 from sqlalchemy.orm import Session
 
 from app.schemas.users import SignupUser
+from .user import crud_user
 
 def login(form_data: OAuth2PasswordRequestForm, db: Session):
-    user = db.query(User).filter(
-        User.email == form_data.username).first()
+    user = crud_user.get_by(db, email=form_data.username)
     
     if not user or not verify_password(form_data.password, user.password):
         raise HTTPException(
@@ -23,7 +23,7 @@ def login(form_data: OAuth2PasswordRequestForm, db: Session):
     return {"access_token": access_token, "token_type": "bearer"}
 
 def register(db, *, obj_in: SignupUser) -> User:
-    existing_user = db.query(User).filter(User.email == obj_in.email.lower()).first()
+    existing_user = crud_user.get_by(db, email=obj_in.email.lower())
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     

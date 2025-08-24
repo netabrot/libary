@@ -2,18 +2,17 @@
 Books Router
 ------------
 
-This file defines the API endpo@router.patch("/{book_id}", response_model=ShowBook)
+This file defines the API endpo@router.put("/{book_id}", response_model=ShowBook)
 def Update an existing book's details (admin/librarian only). Logs the update events for managing books in the library system.
 
 Endpoints:
 - GET /books/        → List books with optional filters (id, title, author, year, genre, copies)
 - POST /books/       → Create a new book (admin/librarian only)
-- PATCH /books/{id}  → Update book details (admin/librarian only)
+- PUT /books/{id}  → Update book details (admin/librarian only)
 - DELETE /books/{id} → Delete a book (admin/librarian only)
 
 Notes:
 - Admin/librarian actions require authentication and role checks.
-- Each action logs an event with `log_event`.
 - Database sessions are provided via `Depends(get_db)`.
 """
 
@@ -25,9 +24,10 @@ from sqlalchemy.orm import Session
 from app.core.enums import UserRole
 from app.schemas import CreateBook, UpdateBook, ShowBook
 from app.db.models import Book, User
-from app.services import crud_book as book, log_event
-from app.api.deps import get_db, require_roles
+from app.services import crud_book as book
+from app.api.deps import require_roles
 from app import utils
+from app.db import get_db
 
 
 router = APIRouter(
@@ -62,10 +62,10 @@ def list_books(
 def create_book(payload: CreateBook, db: Session = Depends(get_db), current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))):
     """Create a new book (admin/librarian only). Logs the creation event."""
     
-    created = book.create(db, db_obj=book, obj_in=payload)
+    created = book.create(db, obj_in=payload)
     return created
 
-@router.patch("/{book_id}", response_model=ShowBook)
+@router.put("/{book_id}", response_model=ShowBook)
 def update_book(book_id: int, payload: UpdateBook, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.ADMIN))):
     """Update an existing book’s details (admin only). Logs the update event."""
 
@@ -85,5 +85,5 @@ def delete_book(book_id: int, db: Session = Depends(get_db), current_user: User 
     if not obj:
         raise HTTPException(status_code=404, detail="Book not found")
     
-    Book.remove(db, id=book_id)
+    book.remove(db, id=book_id)
     return

@@ -11,7 +11,6 @@ Endpoints:
 
 Notes:
 - JWT-based authentication using OAuth2PasswordRequestForm for login.
-- `log_event` is used to track signups, logins, and activity.
 - Database sessions are handled with `Depends(get_db)`.
 """
 
@@ -24,8 +23,9 @@ from sqlalchemy.orm import Session
 from app.schemas import SignupUser, ShowUser
 
 from app.db.models import User
-from app.api.deps import get_db, get_current_user
+from app.api.deps import get_current_user
 from app.services import auth
+from app.db import get_db
 
 
 router = APIRouter(
@@ -44,8 +44,7 @@ def create_user(payload: SignupUser, db: Session = Depends(get_db)) -> Any:
 @router.post("/login")
 def login(db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()) -> Any:
     """Authenticate user via OAuth2 form and return JWT. Logs login event."""
-    logged = auth.login(form_data,db)
-    user = db.query(User).filter(User.email == form_data.username).first()
+    logged = auth.login(form_data, db)
     return logged
 
 

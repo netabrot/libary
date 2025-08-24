@@ -8,8 +8,8 @@ Endpoints:
 - GET /loans/         → List loans with optional filters (book_id, member_id, borrow/return dates)
 - POST /loans/        → Create a new loan (admin/librarian only, checks book availability)
 - GET /loans/active   → Get active loan for a user/book combination
-- PATCH /loans/return/{id} → Return a book by loan ID
-- PATCH /loans/{id}   → Update loan details (admin/librarian only)
+- PUT /loans/return/{id} → Return a book by loan ID
+- PUT /loans/{id}   → Update loan details (admin/librarian only)
 - DELETE /loans/{id}  → Delete a loan (admin/librarian only)
 
 Notes:
@@ -27,9 +27,10 @@ from sqlalchemy.orm import Session
 from app.core.enums import UserRole
 from app.schemas import CreateLoan, UpdateLoan, ShowLoan
 from app.db.models import Book, User
-from app.services import crud_loan as loan
-from app.api.deps import get_db, require_roles
+from app.services import crud_book, crud_loan as loan
+from app.api.deps import require_roles
 from app import utils
+from app.db import get_db
 
 router = APIRouter(
     prefix="/loans",
@@ -63,15 +64,15 @@ def list_loans(
 @router.post("/", response_model=ShowLoan, status_code=status.HTTP_201_CREATED)
 def create_loan(payload: CreateLoan, db: Session = Depends(get_db), current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))):
     """Create a new loan (admin/librarian only). Checks book availability."""
-    book_obj = db.query(Book).filter(Book.id == payload.book_id).first()
+    book_obj = crud_book.get(db, payload.book_id)
     if not book_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
     if book_obj.available_copies <= 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No available copies for this book")
-    created = loan.create_checkout(db, obj_in=payload)
+    created = loan.create_checkout(db, user_id=payload.user_id, book_id=payload.book_id)
     return created
 
-@router.patch("/return/{loan_id}", response_model=ShowLoan)
+@router.put("/return/{loan_id}", response_model=ShowLoan)
 def return_book(loan_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))):
     """Return a book by loan ID."""
     obj = loan.get(db, id=loan_id)
@@ -79,15 +80,22 @@ def return_book(loan_id: int, db: Session = Depends(get_db), current_user: User 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Loan not found")
     return loan.return_book(db, obj_in=obj)
 
-@router.get("/active", response_model=ShowLoan)
-def get_active_loan(book_id: int, member_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))):
-    """Get active loan for a user/book combination."""
-    active_loan = loan.get_active_loan(db, book_id=book_id, member_id=member_id)
-    if not active_loan:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No active loan found")
-    return active_loan
+@router.get("/active", response_model=List[ShowLoan])
+def get_active_loans(
+    user_id: int | None = None,
+    book_id: int | None = None,
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))
+):
+    """Get all active loans, optionally filtered by user_id."""
+    if user_id:
+        active_loans = loan.get_user_loans(db, user_id=user_id, active_only=True)
+    else:
+        active_loans = loan.get_active_loan(db, book_id=book_id)
+    
+    return active_loans
 
-@router.patch("/{loan_id}", response_model=ShowLoan)
+@router.put("/{loan_id}", response_model=ShowLoan)
 def update_loan(loan_id: int, payload: UpdateLoan, db: Session = Depends(get_db), current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))):
     """Update loan details (admin/librarian only)."""
     obj = loan.get(db, id=loan_id)

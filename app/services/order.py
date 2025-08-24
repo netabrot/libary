@@ -24,9 +24,10 @@ class CRUDOrder(CRUDBase[BookOrder, CreateBookOrder, ShowBookOrder]):
         return db.query(self.model).filter(self.model.user_id == user_id,self.model.book_id
                                             == book_id,self.model.status == OrderStatus.WAITING).first()
     
-    def create_order_by_title(self, db: Session, *, user_id: int, book_title: str, notify_preference: str = "email") -> BookOrder:
+    def create_order_by_title(self, db: Session, *, user_id: int, book_title: str) -> BookOrder:
         """Create a new order by searching for book title."""
-        book = db.query(Book).filter(Book.title.ilike(f"%{book_title}%")).first()
+        book = crud_book.list_like(db, title=book_title)
+        book = book[0] if book else None
         
         if not book:
             raise ValueError(f"Book with title '{book_title}' not found")
@@ -41,7 +42,6 @@ class CRUDOrder(CRUDBase[BookOrder, CreateBookOrder, ShowBookOrder]):
         order_data = {
             "user_id": user_id,
             "book_id": book.id,
-            "notify_when_available": notify_preference,
             "priority": 1,
             "status": OrderStatus.WAITING
         }

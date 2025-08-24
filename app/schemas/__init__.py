@@ -1,17 +1,19 @@
 from .users import ShowUser, CreateUser, UpdateUser, SignupUser
 from .books import ShowBook, CreateBook, UpdateBook
-from .loans import ShowLoan, CreateLoan, UpdateLoan
+from .loans import ShowLoan, CreateLoan, UpdateLoan, PublicLoan
 from .events import ShowEvent, EventBase
 from .order import CreateBookOrder, ShowBookOrder
 from .token import Token, TokenPayload
+from .statistics import LibraryOverview, BookStatistics, UserStatistics, OperationalStats
 
 __all__ = [
     "ShowUser", "CreateUser", "UpdateUser", "SignupUser",
     "ShowBook", "CreateBook", "UpdateBook",
-    "ShowLoan", "CreateLoan", "UpdateLoan",
+    "ShowLoan", "CreateLoan", "UpdateLoan", "PublicLoan",
     "ShowEvent", "EventBase",
     "CreateBookOrder", "ShowBookOrder",
     "Token", "TokenPayload",
+    "LibraryOverview", "BookStatistics", "UserStatistics", "OperationalStats",
 ]
 
 """
@@ -24,10 +26,8 @@ serialization throughout the project. Each module groups related schemas
 Conventions:
 - `Base` classes hold shared fields.
 - `Create` schemas are used for POST (all required).
-- `Update` schemas are used for PATCH (all optional).
+- `Update` schemas are used for PUT (all optional).
 - `Show` schemas are returned in API responses (usually include IDs or relations).
 """
 
 
-#TODO: Order
-#TODO: define constraints (Pydantic) for critical fields
