@@ -64,6 +64,18 @@ def require_role(required_role: UserRole):
         return current_user
     return role_checker
 
+def require_roles(allowed_roles: list[UserRole]):
+    def role_checker(current_user: User = Depends(get_current_user)):
+        """Ensure the current user has one of the allowed roles."""
+        if current_user.role not in allowed_roles:
+            roles_str = " or ".join([role.value for role in allowed_roles])
+            raise HTTPException(
+                status_code=403,
+                detail=f"{roles_str} only"
+            )
+        return current_user
+    return role_checker
+
 class ResponseTimeMiddleware(BaseHTTPMiddleware):
     SKIP_PATHS = {"/", "/test"}
 

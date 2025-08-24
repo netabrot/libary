@@ -2,16 +2,18 @@
 Books Router
 ------------
 
-This file defines the API endpoints for managing books in the library system.
+This file defines the API endpo@router.patch("/{book_id}", response_model=ShowBook)
+def update_book(book_id: int, payload: UpdateBook, db: Session = Depends(get_db), current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))):
+    """Update an existing book's details (admin/librarian only). Logs the update event."""s for managing books in the library system.
 
 Endpoints:
 - GET /books/        → List books with optional filters (id, title, author, year, genre, copies)
-- POST /books/       → Create a new book (admin only)
-- PATCH /books/{id}  → Update book details (admin only)
-- DELETE /books/{id} → Delete a book (admin only)
+- POST /books/       → Create a new book (admin/librarian only)
+- PATCH /books/{id}  → Update book details (admin/librarian only)
+- DELETE /books/{id} → Delete a book (admin/librarian only)
 
 Notes:
-- Admin-only actions require authentication and role checks.
+- Admin/librarian actions require authentication and role checks.
 - Each action logs an event with `log_event`.
 - Database sessions are provided via `Depends(get_db)`.
 """
@@ -25,7 +27,7 @@ from app.core.enums import UserRole
 from app.schemas import CreateBook, UpdateBook, ShowBook
 from app.db.models import Book, User
 from app.services import crud_book as book, log_event
-from app.api.deps import get_db, require_role
+from app.api.deps import get_db, require_roles
 from app import utils
 
 
@@ -58,8 +60,8 @@ def list_books(
     return searched
 
 @router.post("/", response_model=ShowBook)
-def create_book(payload: CreateBook, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
-    """Create a new book (admin only). Logs the creation event."""
+def create_book(payload: CreateBook, db: Session = Depends(get_db), current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))):
+    """Create a new book (admin/librarian only). Logs the creation event."""
     
     created = book.create(db, db_obj=book, obj_in=payload)
     return created
