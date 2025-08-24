@@ -23,18 +23,17 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.enums import EventType, ObjectType, UserRole
+from app.core.enums import UserRole
 from app.schemas import CreateLoan, UpdateLoan, ShowLoan
 from app.db.models import Book, User
 from app.services import crud_loan as loan, log_event
-from app.api.deps import get_db, require_role
+from app.api.deps import get_db, require_roles
 from app import utils
 
 router = APIRouter(
     prefix="/loans",
     tags=['Loans']
 )
-#router.route_class = TimedRoute
 
 @router.get("/", response_model=List[ShowLoan])
 def list_loans(
@@ -44,8 +43,8 @@ def list_loans(
         member_id: int | None = None,
         return_date: date | None = None,
         db: Session = Depends(get_db),
-        current_user: User = Depends(require_role(UserRole.ADMIN))):
-    """List loans with optional filters (admin only)."""
+        current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))):
+    """List loans with optional filters (admin/librarian only)."""
 
     
     filters = utils.filters(
@@ -61,8 +60,8 @@ def list_loans(
     return searched
 
 @router.post("/", response_model=ShowLoan, status_code=status.HTTP_201_CREATED)
-def create_loan(payload: CreateLoan, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
-    """Create a new loan (admin only). Checks book availability and logs the event."""
+def create_loan(payload: CreateLoan, db: Session = Depends(get_db), current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))):
+    """Create a new loan (admin/librarian only). Checks book availability and logs the event."""
     book = db.query(Book).filter(Book.id == payload.book_id).first()
     if not book:
         raise HTTPException(status_code=404, detail="Book not found")
@@ -73,8 +72,8 @@ def create_loan(payload: CreateLoan, db: Session = Depends(get_db), current_user
     return created
 
 @router.patch("/{loan_id}", response_model=ShowLoan)
-def update_loan(loan_id: int, payload: UpdateLoan, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
-    """Update loan details (admin only). Logs updated fields."""
+def update_loan(loan_id: int, payload: UpdateLoan, db: Session = Depends(get_db), current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))):
+    """Update loan details (admin/librarian only). Logs updated fields."""
 
     obj = loan.get(db, id=loan_id)
     if not obj:
@@ -85,8 +84,8 @@ def update_loan(loan_id: int, payload: UpdateLoan, db: Session = Depends(get_db)
     
 
 @router.delete("/{loan_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_loan(loan_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_role(UserRole.ADMIN))):
-    """Delete a loan by ID (admin only). Logs the deletion event."""
+def delete_loan(loan_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_roles([UserRole.ADMIN, UserRole.LIBRARIAN]))):
+    """Delete a loan by ID (admin/librarian only). Logs the deletion event."""
     obj = loan.get(db, id=loan_id)
     if not obj:
         raise HTTPException(status_code=404, detail="Loan not found")
